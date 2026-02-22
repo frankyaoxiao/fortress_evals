@@ -107,11 +107,13 @@ async def main():
         )
     )
 
+    # AsyncLLM doesn't support n>1 per request — submit n separate requests per prompt
+    n_samples = sc["n"]
     params = SamplingParams(
         temperature=sc["temperature"],
         top_p=sc["top_p"],
         max_tokens=sc["max_tokens"],
-        n=sc["n"],
+        n=1,
     )
 
     # Scoring setup — tasks fire eagerly, semaphore keeps max in flight
@@ -122,47 +124,58 @@ async def main():
     failed_prompts = []  # prompt_ids where generation failed
     score_tasks = []  # [(prompt_id, completion_idx, Task)]
 
-    # Progress bars
-    gen_bar = tqdm(total=n_prompts, desc=f"{prefix} Generating", unit="prompt", position=0)
+    # Progress bars — track individual completions for generation too
+    gen_bar = tqdm(total=n_completions, desc=f"{prefix} Generating", unit="comp", position=0)
     score_bar = tqdm(total=n_completions, desc=f"{prefix} Scoring", unit="comp", position=1)
 
-    async def handle_prompt(prompt, formatted_text):
-        """Generate completions for one prompt, fire scoring immediately."""
+    async def handle_sample(prompt, formatted_text, sample_idx):
+        """Generate one completion, fire scoring immediately."""
         try:
+            request_id = f"{prompt['id']}_{sample_idx}"
             final = None
             async for output in engine.generate(
-                formatted_text, params, request_id=str(prompt["id"])
+                formatted_text, params, request_id=request_id
             ):
                 final = output
 
             if final is None or not final.outputs:
-                print(f"\n{prefix} Generation failed for prompt {prompt['id']}")
-                failed_prompts.append(prompt["id"])
-                gen_bar.update(1)
-                score_bar.total -= sc["n"]
-                score_bar.refresh()
-                return
+                print(f"\n{prefix} Generation failed: prompt {prompt['id']} sample {sample_idx}")
+                return None
 
-            texts = [o.text for o in final.outputs]
-            completions[prompt["id"]] = texts
+            text = final.outputs[0].text
             gen_bar.update(1)
 
-            # Fire scoring tasks — they start immediately, semaphore throttles
-            for idx, text in enumerate(texts):
-                task = asyncio.create_task(
-                    score_one(scorer, sem, text, scoring_config, score_bar)
-                )
-                score_tasks.append((prompt["id"], idx, task))
+            # Fire scoring task immediately
+            task = asyncio.create_task(
+                score_one(scorer, sem, text, scoring_config, score_bar)
+            )
+            score_tasks.append((prompt["id"], sample_idx, task))
+            return text
 
         except Exception as e:
-            print(f"\n{prefix} Error on prompt {prompt['id']}: {e}")
-            failed_prompts.append(prompt["id"])
-            gen_bar.update(1)
-            score_bar.total -= sc["n"]
-            score_bar.refresh()
+            print(f"\n{prefix} Error: prompt {prompt['id']} sample {sample_idx}: {e}")
+            return None
 
-    # Submit all prompts concurrently — engine batches internally
-    await asyncio.gather(*[handle_prompt(p, f) for p, f in zip(prompts, formatted)])
+    # Submit all prompts × n_samples concurrently — engine batches internally
+    all_coros = []
+    for p, f in zip(prompts, formatted):
+        for sample_idx in range(n_samples):
+            all_coros.append(handle_sample(p, f, sample_idx))
+
+    results = await asyncio.gather(*all_coros)
+
+    # Collect completions by prompt
+    idx = 0
+    for p in prompts:
+        texts = []
+        for sample_idx in range(n_samples):
+            if results[idx] is not None:
+                texts.append(results[idx])
+            idx += 1
+        if texts:
+            completions[p["id"]] = texts
+        else:
+            failed_prompts.append(p["id"])
     gen_bar.close()
 
     # Wait for any remaining scoring tasks
