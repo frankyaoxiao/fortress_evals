@@ -2,6 +2,7 @@
 """Plot mean completion length per model with two-level cluster bootstrap CIs."""
 
 import argparse
+import csv
 import json
 import sys
 from collections import defaultdict
@@ -56,30 +57,21 @@ def load_lengths(comp_path):
     return prompt_data, all_lengths
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Plot mean completion length per model")
-    parser.add_argument("run_dir", type=str, help="Path to run directory (containing completions/)")
-    parser.add_argument("-o", "--output", type=str, default=None)
-    parser.add_argument("--title", type=str, default="Mean Completion Length")
-    parser.add_argument("--xlabel", type=str, default=None)
-    parser.add_argument("--order", type=str, default=None,
-                        help="Comma-separated model order (default: from summary.csv)")
-    args = parser.parse_args()
-
-    style_path = Path(__file__).parent.parent / "style" / "goodfire.mplstyle"
-    setup_style(str(style_path), verbose=True)
-
-    run_dir = Path(args.run_dir)
+def plot_lengths(run_dir, output=None, title=None, xlabel=None):
+    run_dir = Path(run_dir)
     comp_dir = run_dir / "completions"
 
-    # Get model order from summary.csv if it exists
+    # Get model order from summary.csv or config.yaml
     summary = run_dir / "summary.csv"
-    if args.order:
-        models = args.order.split(",")
-    elif summary.exists():
-        import csv
+    config_path = run_dir / "config.yaml"
+    if summary.exists():
         with open(summary) as f:
             models = [r["model"] for r in csv.DictReader(f)]
+    elif config_path.exists():
+        import yaml
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        models = [m["short_name"] for m in config["models"]]
     else:
         models = sorted(p.stem for p in comp_dir.glob("*.jsonl"))
 
@@ -118,8 +110,8 @@ def main():
                 f"{mean:,.0f}", ha="center", va="bottom", fontweight="bold")
 
     ax.set_ylabel("Mean Completion Length (chars)")
-    if args.xlabel:
-        ax.set_xlabel(args.xlabel)
+    if xlabel:
+        ax.set_xlabel(xlabel)
     max_upper = max(m + h for m, h in zip(means, ci_hi))
     ax.set_ylim(0, max_upper * 1.2)
     ax.spines["top"].set_visible(False)
@@ -127,17 +119,34 @@ def main():
     ax.yaxis.grid(True)
     plt.xticks(rotation=45 if len(models) > 6 else 0, ha="right" if len(models) > 6 else "center")
 
-    apply_suptitle(fig, args.title, fontsize=14, ax=ax)
+    if title:
+        apply_suptitle(fig, title, fontsize=14, ax=ax)
     plt.tight_layout()
-    fig.subplots_adjust(top=0.88)
+    if title:
+        fig.subplots_adjust(top=0.88)
 
-    if args.output:
-        out = Path(args.output)
-    else:
-        out = Path("figs") / f"{run_dir.name}_lengths.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out)
-    print(f"Saved -> {out}")
+    if output is None:
+        output = Path("figs") / run_dir.name / "lengths.png"
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output)
+    plt.close(fig)
+    print(f"Saved -> {output}")
+    return output
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Plot mean completion length per model")
+    parser.add_argument("run_dir", type=str, help="Path to run directory")
+    parser.add_argument("-o", "--output", type=str, default=None)
+    parser.add_argument("--title", type=str, default=None)
+    parser.add_argument("--xlabel", type=str, default=None)
+    args = parser.parse_args()
+
+    style_path = Path(__file__).parent.parent / "style" / "goodfire.mplstyle"
+    setup_style(str(style_path), verbose=True)
+
+    plot_lengths(args.run_dir, args.output, args.title, args.xlabel)
 
 
 if __name__ == "__main__":

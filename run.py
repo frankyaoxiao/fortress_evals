@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Orchestrator: spawn independent GPU workers pulling from a shared model queue."""
+"""Orchestrator: submit per-model Slurm jobs from a shared queue."""
 
 import argparse
 import asyncio
@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -14,6 +15,8 @@ import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
+
+REPO_DIR = Path(__file__).parent.resolve()
 
 
 def parse_args():
@@ -33,49 +36,96 @@ def parse_args():
     return parser.parse_args()
 
 
-async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir, n_prompts):
-    """Pull models from shared queue until empty. Fully independent of other workers."""
+def write_sbatch_script(model, config, config_path, prompts_path, log_dir, slurm_cfg):
+    """Write a temporary sbatch script for one model. Returns the script path."""
+    short_name = model["short_name"]
+    tp = config["vllm"]["tensor_parallel_size"]
+    job_name = slurm_cfg.get("job_name", "fortress")
+    partition = slurm_cfg.get("partition", "compute")
+    timeout = slurm_cfg.get("timeout", "4:00:00")
+    cpus = slurm_cfg.get("cpus_per_task", 32)
+    scorer_limit = config["scoring"]["max_concurrent"] // slurm_cfg.get("max_concurrent", 4)
+
+    slurm_log_dir = log_dir / "slurm_logs"
+    slurm_log_dir.mkdir(parents=True, exist_ok=True)
+
+    model_json = json.dumps(model)
+
+    script = f"""#!/bin/bash
+#SBATCH --job-name={job_name}_{short_name}
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node={tp}
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task={cpus}
+#SBATCH --partition={partition}
+#SBATCH --time={timeout}
+#SBATCH --output={slurm_log_dir}/{short_name}.out
+#SBATCH --error={slurm_log_dir}/{short_name}.err
+
+set -euo pipefail
+cd {REPO_DIR}
+
+export SCORER_MAX_CONCURRENT={scorer_limit}
+
+uv run python worker.py \\
+    '{model_json}' \\
+    '{config_path}' \\
+    '{prompts_path}' \\
+    '{log_dir}'
+"""
+    fd, path = tempfile.mkstemp(suffix=".sh", prefix=f"fortress_{short_name}_", dir=slurm_log_dir)
+    with os.fdopen(fd, "w") as f:
+        f.write(script)
+    return path
+
+
+async def slurm_worker(slot_id, queue, config, config_path, prompts_path, log_dir, slurm_cfg, n_prompts):
+    """Pull models from shared queue, submit sbatch --wait for each."""
     while True:
         try:
             model = queue.get_nowait()
         except asyncio.QueueEmpty:
             break
 
-        score_path = log_dir / "scores" / f"{model['short_name']}.jsonl"
+        short_name = model["short_name"]
+
+        # Skip if already complete
+        score_path = log_dir / "scores" / f"{short_name}.jsonl"
         if score_path.exists():
             n_lines = sum(1 for _ in open(score_path))
             expected = config["sampling"]["n"] * n_prompts
             if n_lines >= expected:
-                print(f"[GPU {gpu_ids}] Skipping {model['short_name']}: already scored ({n_lines} lines)")
+                print(f"[slot {slot_id}] Skipping {short_name}: already scored ({n_lines} lines)")
                 queue.task_done()
                 continue
             else:
-                print(f"[GPU {gpu_ids}] Incomplete {model['short_name']}: {n_lines}/{expected} lines, re-running")
+                print(f"[slot {slot_id}] Incomplete {short_name}: {n_lines}/{expected} lines, re-running")
                 score_path.unlink()
-                comp_path = log_dir / "completions" / f"{model['short_name']}.jsonl"
+                comp_path = log_dir / "completions" / f"{short_name}.jsonl"
                 if comp_path.exists():
                     comp_path.unlink()
 
-        print(f"[GPU {gpu_ids}] Starting {model['short_name']}...")
-        scorer_limit = config["scoring"]["max_concurrent"] // len(config["vllm"]["gpu_sets"])
-        env = {**os.environ, "CUDA_VISIBLE_DEVICES": gpu_ids, "SCORER_MAX_CONCURRENT": str(scorer_limit)}
-        proc = await asyncio.create_subprocess_exec(
-            sys.executable,
-            "worker.py",
-            json.dumps(model),
-            str(config_path),
-            str(prompts_path),
-            str(log_dir),
-            env=env,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
+        script_path = write_sbatch_script(
+            model, config, config_path, prompts_path, log_dir, slurm_cfg
         )
+
+        # sbatch --parsable --wait: prints job ID immediately, blocks until done
+        proc = await asyncio.create_subprocess_exec(
+            "sbatch", "--parsable", "--wait", script_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        job_id_line = await proc.stdout.readline()
+        job_id = job_id_line.decode().strip()
+        print(f"[slot {slot_id}] Submitted {short_name} (job {job_id})")
+
         ret = await proc.wait()
         queue.task_done()
-        if ret != 0:
-            print(f"[GPU {gpu_ids}] FAILED: {model['short_name']} (exit {ret})")
+
+        if ret == 0:
+            print(f"[slot {slot_id}] Done: {short_name} (job {job_id})")
         else:
-            print(f"[GPU {gpu_ids}] Done: {model['short_name']}")
+            print(f"[slot {slot_id}] FAILED: {short_name} (job {job_id}, exit {ret})")
 
 
 def analyze(config, log_dir):
@@ -128,51 +178,44 @@ async def main():
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
-    # Resolve log dir
+    slurm_cfg = config.get("slurm", {})
+
+    # Resolve all paths to absolute — sbatch scripts run on different nodes
     if args.log_dir:
-        log_dir = Path(args.log_dir)
+        log_dir = Path(args.log_dir).resolve()
     else:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_dir = Path("runs") / timestamp
+        log_dir = (Path("runs") / timestamp).resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
 
-    # Snapshot config into log dir for reproducibility
-    shutil.copy2(args.config, log_dir / "config.yaml")
+    config_path = Path(args.config).resolve()
+    shutil.copy2(config_path, log_dir / "config.yaml")
 
-    prompts_path = Path(config["paths"]["prompts"])
+    prompts_path = Path(config["paths"]["prompts"]).resolve()
     if not prompts_path.exists():
         print(f"ERROR: {prompts_path} not found. Run `uv run python sample_prompts.py` first.")
         sys.exit(1)
 
-    # Copy prompts into log dir for self-contained runs
     shutil.copy2(prompts_path, log_dir / "prompts.jsonl")
 
-    # Validate GPU config
-    tp = config["vllm"]["tensor_parallel_size"]
-    for gpu_ids in config["vllm"]["gpu_sets"]:
-        n_gpus = len(gpu_ids.split(","))
-        if n_gpus != tp:
-            print(
-                f"ERROR: gpu_set '{gpu_ids}' has {n_gpus} GPUs but "
-                f"tensor_parallel_size is {tp}"
-            )
-            sys.exit(1)
-
-    # Count actual prompts in file — used for completeness checks instead of config
     n_prompts = sum(1 for _ in open(prompts_path))
+    max_concurrent = slurm_cfg.get("max_concurrent", 4)
+
     print(f"Log dir: {log_dir}")
     print(f"Prompts: {n_prompts} (from {prompts_path})")
+    print(f"Models: {len(config['models'])}")
+    print(f"Max concurrent Slurm jobs: {max_concurrent}")
+    print()
 
-    # Shared work queue — workers pull from it, whoever finishes first grabs the next
+    # Shared work queue
     queue = asyncio.Queue()
     for model in config["models"]:
         queue.put_nowait(model)
 
-    gpu_sets = config["vllm"]["gpu_sets"]
     await asyncio.gather(
         *[
-            gpu_worker(gpu_ids, queue, config, args.config, prompts_path, log_dir, n_prompts)
-            for gpu_ids in gpu_sets
+            slurm_worker(i, queue, config, config_path, prompts_path, log_dir, slurm_cfg, n_prompts)
+            for i in range(max_concurrent)
         ]
     )
 

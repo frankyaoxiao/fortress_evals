@@ -14,26 +14,27 @@ sampling:
   temperature: 0.6
   top_p: 0.95
   max_tokens: 3072
-  n: 100
+  n: 20
 
 dataset:
   arrow_path: "/data/artifacts/hf_cache/datasets/ScaleAI___fortress_public/default/0.0.0/0c096becbc75bb12065c8059a53960c7f0d4d35c/fortress_public-train.arrow"
-  num_prompts: 100
+  num_prompts: 500
   seed: 42
 
 scoring:
   model: "gpt-5-mini"
   reasoning_effort: "medium"
-  max_completion_tokens: 500
+  max_completion_tokens: 2048
   max_concurrent: 200
 
 vllm:
   tensor_parallel_size: 2
-  gpu_sets:
-    - "0,1"
-    - "2,3"
-    - "4,5"
-    - "6,7"
+
+slurm:
+  partition: "compute"
+  max_concurrent: 4
+  timeout: "4:00:00"
+  job_name: "fortress-7b"
 
 paths:
-  prompts: "data/sampled_prompts.jsonl"
+  prompts: "data/sampled_prompts_500.jsonl"

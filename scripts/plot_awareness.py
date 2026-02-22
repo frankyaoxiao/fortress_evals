@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Plot eval awareness rates from a summary CSV as a bar chart with bootstrap CIs."""
+"""Plot eval awareness rates as a bar chart with two-level cluster bootstrap CIs."""
 
 import argparse
 import csv
@@ -51,23 +51,17 @@ def bootstrap_ci(score_path, n_boot=10000, ci=95, seed=42):
     return lo, hi
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Plot eval awareness bar chart from summary CSV")
-    parser.add_argument("csv", type=str, help="Path to summary.csv")
-    parser.add_argument("-o", "--output", type=str, default=None, help="Output image path (default: figs/<csv_parent_name>.png)")
-    parser.add_argument("--title", type=str, default="Eval Awareness Rate", help="Chart title")
-    parser.add_argument("--xlabel", type=str, default=None, help="X-axis label")
-    args = parser.parse_args()
+def plot_awareness(run_dir, output=None, title=None, xlabel=None):
+    run_dir = Path(run_dir)
+    scores_dir = run_dir / "scores"
+    summary_path = run_dir / "summary.csv"
 
-    style_path = Path(__file__).parent.parent / "style" / "goodfire.mplstyle"
-    setup_style(str(style_path), verbose=True)
+    if not summary_path.exists():
+        print(f"ERROR: {summary_path} not found")
+        return
 
-    csv_path = Path(args.csv)
-    scores_dir = csv_path.parent / "scores"
-
-    with open(csv_path) as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
+    with open(summary_path) as f:
+        rows = list(csv.DictReader(f))
 
     models = [r["model"] for r in rows]
     rates = []
@@ -87,7 +81,7 @@ def main():
             rates.append(obs * 100)
             ci_lo.append(0)
             ci_hi.append(0)
-            print(f"  {r['model']:>15}: {obs:.1f}%  (no score file)")
+            print(f"  {r['model']:>15}: {obs:.2%}  (no score file)")
 
     yerr = [ci_lo, ci_hi]
     colors = [COLORS[i % len(COLORS)] for i in range(len(models))]
@@ -101,8 +95,8 @@ def main():
                 f"{rate:.1f}%", ha="center", va="bottom", fontweight="bold")
 
     ax.set_ylabel("Eval Awareness (%)")
-    if args.xlabel:
-        ax.set_xlabel(args.xlabel)
+    if xlabel:
+        ax.set_xlabel(xlabel)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=1))
     max_upper = max(r + h for r, h in zip(rates, ci_hi))
     ax.set_ylim(0, max_upper * 1.25)
@@ -111,17 +105,34 @@ def main():
     ax.yaxis.grid(True)
     plt.xticks(rotation=45 if len(models) > 6 else 0, ha="right" if len(models) > 6 else "center")
 
-    apply_suptitle(fig, args.title, fontsize=14, ax=ax)
+    if title:
+        apply_suptitle(fig, title, fontsize=14, ax=ax)
     plt.tight_layout()
-    fig.subplots_adjust(top=0.88)
+    if title:
+        fig.subplots_adjust(top=0.88)
 
-    if args.output:
-        out = Path(args.output)
-    else:
-        out = Path("figs") / f"{csv_path.parent.name}.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out)
-    print(f"Saved -> {out}")
+    if output is None:
+        output = Path("figs") / run_dir.name / "awareness.png"
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output)
+    plt.close(fig)
+    print(f"Saved -> {output}")
+    return output
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Plot eval awareness bar chart")
+    parser.add_argument("run_dir", type=str, help="Path to run directory")
+    parser.add_argument("-o", "--output", type=str, default=None)
+    parser.add_argument("--title", type=str, default=None)
+    parser.add_argument("--xlabel", type=str, default=None)
+    args = parser.parse_args()
+
+    style_path = Path(__file__).parent.parent / "style" / "goodfire.mplstyle"
+    setup_style(str(style_path), verbose=True)
+
+    plot_awareness(args.run_dir, args.output, args.title, args.xlabel)
 
 
 if __name__ == "__main__":
