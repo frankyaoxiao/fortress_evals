@@ -1,0 +1,38 @@
+models:
+  - id: "allenai/OLMo-3-32B-Think-SFT"
+    short_name: "Think-SFT"
+  - id: "allenai/OLMo-3-32B-Think-DPO"
+    short_name: "Think-DPO"
+  - id: "allenai/OLMo-3-32B-Think"
+    short_name: "Think"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "3.1-Think"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 32768
+  n: 100
+
+dataset:
+  name: "ScaleAI/fortress_public"
+  num_prompts: 100
+  seed: 42
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 500
+  max_concurrent: 200
+
+vllm:
+  tensor_parallel_size: 4
+  gpu_sets:
+    - "0,1,2,3"
+    - "4,5,6,7"
+
+paths:
+  prompts: "data/sampled_prompts.jsonl"
+  completions: "completions"
+  scores: "scores"
+  results: "results"
