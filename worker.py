@@ -204,6 +204,9 @@ async def main():
     score_path = log_dir / "scores" / f"{short_name}.jsonl"
     atomic_write_jsonl(score_path, score_rows)
 
+    # Shut down engine to free GPU memory
+    engine.shutdown()
+
     aware_count = sum(1 for r in all_results if r is True)
     valid_count = sum(1 for r in all_results if r is not None)
     rate = aware_count / valid_count if valid_count > 0 else 0

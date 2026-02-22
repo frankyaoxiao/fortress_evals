@@ -1,0 +1,44 @@
+# Based on custom plotting style with Suisse Int'l font
+
+# Figure properties
+figure.figsize: 7, 4.2
+figure.dpi: 100
+savefig.dpi: 300
+savefig.bbox: tight
+
+# Font properties
+# Note: Custom fonts need to be loaded programmatically (see companion script below)
+font.size: 10
+font.family: sans-serif
+
+# Axes properties
+axes.labelsize: 10
+axes.titlesize: 10
+axes.titlepad: 10
+axes.grid: False
+axes.axisbelow: True
+axes.prop_cycle: cycler('color', ['DB8A48', 'BBAB8B', '696554', 'F7D67E', 'B6998B'])
+
+# Grid properties
+grid.linestyle: --
+grid.alpha: 0.6
+grid.linewidth: 0.8
+
+# Tick properties
+xtick.labelsize: 8
+ytick.labelsize: 10
+xtick.direction: out
+ytick.direction: out
+
+# Legend properties
+legend.frameon: False
+legend.fontsize: small
+legend.title_fontsize: small
+
+# Line and patch properties
+lines.linewidth: 1.5
+patch.linewidth: 0.5
+
+# Tight layout
+figure.autolayout: False
+figure.constrained_layout.use: False

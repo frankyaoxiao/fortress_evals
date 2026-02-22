@@ -10,4 +10,5 @@ dependencies = [
     "pyyaml",
     "python-dotenv",
     "tqdm",
+    "matplotlib>=3.10.8",
 ]

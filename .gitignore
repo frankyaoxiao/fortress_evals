@@ -1,4 +1,5 @@
 .env
 data/
 runs/
+figs/
 __pycache__/
