@@ -11,4 +11,5 @@ dependencies = [
     "python-dotenv",
     "tqdm",
     "matplotlib>=3.10.8",
+    "scipy>=1.15.3",
 ]
