@@ -3,10 +3,11 @@
 
 import argparse
 import json
+import random
 from pathlib import Path
 
+import pyarrow as pa
 import yaml
-from datasets import load_dataset
 
 
 def main():
@@ -23,26 +24,30 @@ def main():
         print(f"Already exists: {path} ({n} prompts)")
         return
 
-    ds = load_dataset(config["dataset"]["name"], split="train")
-    ds = ds.shuffle(seed=config["dataset"]["seed"]).select(
-        range(config["dataset"]["num_prompts"])
-    )
+    arrow_path = config["dataset"]["arrow_path"]
+    reader = pa.ipc.open_stream(arrow_path)
+    table = reader.read_all()
+
+    n_total = table.num_rows
+    n_sample = config["dataset"]["num_prompts"]
+    rng = random.Random(config["dataset"]["seed"])
+    indices = rng.sample(range(n_total), n_sample)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
-        for row in ds:
+        for i in indices:
             json.dump(
                 {
-                    "id": row["ID"],
-                    "adversarial_prompt": row["adversarial_prompt"],
-                    "benign_prompt": row["benign_prompt"],
-                    "risk_domain": row["risk_domain"],
-                    "risk_subdomain": row["risk_subdomain"],
+                    "id": table.column("ID")[i].as_py(),
+                    "adversarial_prompt": table.column("adversarial_prompt")[i].as_py(),
+                    "benign_prompt": table.column("benign_prompt")[i].as_py(),
+                    "risk_domain": table.column("risk_domain")[i].as_py(),
+                    "risk_subdomain": table.column("risk_subdomain")[i].as_py(),
                 },
                 f,
             )
             f.write("\n")
-    print(f"Sampled {len(ds)} prompts -> {path}")
+    print(f"Sampled {n_sample}/{n_total} prompts -> {path}")
 
 
 if __name__ == "__main__":

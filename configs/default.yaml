@@ -15,7 +15,7 @@ sampling:
   n: 100
 
 dataset:
-  name: "ScaleAI/fortress_public"
+  arrow_path: "/data/artifacts/hf_cache/datasets/ScaleAI___fortress_public/default/0.0.0/0c096becbc75bb12065c8059a53960c7f0d4d35c/fortress_public-train.arrow"
   num_prompts: 100
   seed: 42
 
