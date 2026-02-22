@@ -43,7 +43,9 @@ def write_sbatch_script(model, config, config_path, prompts_path, log_dir, slurm
     job_name = slurm_cfg.get("job_name", "fortress")
     partition = slurm_cfg.get("partition", "compute")
     timeout = slurm_cfg.get("timeout", "4:00:00")
-    cpus = slurm_cfg.get("cpus_per_task", 32)
+    gpus_per_node = slurm_cfg.get("gpus_per_node", 8)
+    cpus_per_node = slurm_cfg.get("cpus_per_node", 64)
+    cpus = cpus_per_node // gpus_per_node * tp
     scorer_limit = config["scoring"]["max_concurrent"] // slurm_cfg.get("max_concurrent", 4)
 
     slurm_log_dir = log_dir / "slurm_logs"
