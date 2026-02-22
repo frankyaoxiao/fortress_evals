@@ -9,8 +9,5 @@ dependencies = [
     "transformers",
     "pyyaml",
     "python-dotenv",
+    "tqdm",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"

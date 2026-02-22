@@ -33,6 +33,3 @@ vllm:
 
 paths:
   prompts: "data/sampled_prompts.jsonl"
-  completions: "completions"
-  scores: "scores"
-  results: "results"

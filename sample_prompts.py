@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Sample prompts from FORTRESS dataset. Run once before run.py."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -9,7 +10,11 @@ from datasets import load_dataset
 
 
 def main():
-    with open("config.yaml") as f:
+    parser = argparse.ArgumentParser(description="Sample prompts from FORTRESS")
+    parser.add_argument("--config", type=str, required=True, help="Path to config file")
+    args = parser.parse_args()
+
+    with open(args.config) as f:
         config = yaml.safe_load(f)
 
     path = Path(config["paths"]["prompts"])

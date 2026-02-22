@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
+from tqdm import tqdm
 from transformers import AutoTokenizer
 from vllm import SamplingParams
 from vllm.engine.arg_utils import AsyncEngineArgs
@@ -23,7 +24,7 @@ SCORER_PROMPT = (
 )
 
 
-async def score_one(client, sem, text, scoring_config):
+async def score_one(client, sem, text, scoring_config, score_bar):
     """Score a single completion. Retries with exponential backoff."""
     async with sem:
         for attempt in range(5):
@@ -37,28 +38,35 @@ async def score_one(client, sem, text, scoring_config):
                     ],
                 )
                 answer = resp.choices[0].message.content.strip().upper()
-                return "YES" in answer
+                result = "YES" in answer
+                score_bar.update(1)
+                return result
             except Exception as e:
                 if attempt == 4:
-                    print(f"  Scoring failed after 5 attempts: {e}")
+                    score_bar.update(1)
                     return None
                 await asyncio.sleep(2**attempt)
 
 
 async def main():
+    # Args: model_json, config_path, prompts_path, log_dir
     model = json.loads(sys.argv[1])
     with open(sys.argv[2]) as f:
         config = yaml.safe_load(f)
     with open(sys.argv[3]) as f:
         prompts = [json.loads(line) for line in f]
+    log_dir = Path(sys.argv[4])
 
     model_id = model["id"]
     short_name = model["short_name"]
     sc = config["sampling"]
     scoring_config = config["scoring"]
+    n_prompts = len(prompts)
+    n_completions = n_prompts * sc["n"]
+    prefix = f"[{short_name}]"
 
     # Format prompts with chat template
-    print(f"  [{short_name}] Loading tokenizer...")
+    print(f"{prefix} Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     formatted = [
         tokenizer.apply_chat_template(
@@ -70,7 +78,7 @@ async def main():
     ]
 
     # Create engine
-    print(f"  [{short_name}] Loading model...")
+    print(f"{prefix} Loading model...")
     engine = AsyncLLM.from_engine_args(
         AsyncEngineArgs(
             model=model_id,
@@ -92,6 +100,10 @@ async def main():
     completions = {}  # prompt_id -> [str]
     score_tasks = []  # [(prompt_id, completion_idx, Task)]
 
+    # Progress bars
+    gen_bar = tqdm(total=n_prompts, desc=f"{prefix} Generating", unit="prompt", position=0)
+    score_bar = tqdm(total=n_completions, desc=f"{prefix} Scoring", unit="comp", position=1)
+
     async def handle_prompt(prompt, formatted_text):
         """Generate completions for one prompt, fire scoring immediately."""
         final = None
@@ -102,22 +114,25 @@ async def main():
 
         texts = [o.text for o in final.outputs]
         completions[prompt["id"]] = texts
+        gen_bar.update(1)
 
         # Fire scoring tasks — they start immediately, semaphore throttles
         for idx, text in enumerate(texts):
-            task = asyncio.create_task(score_one(scorer, sem, text, scoring_config))
+            task = asyncio.create_task(
+                score_one(scorer, sem, text, scoring_config, score_bar)
+            )
             score_tasks.append((prompt["id"], idx, task))
 
     # Submit all prompts concurrently — engine batches internally
-    print(f"  [{short_name}] Generating {len(prompts)} x {sc['n']} completions...")
     await asyncio.gather(*[handle_prompt(p, f) for p, f in zip(prompts, formatted)])
+    gen_bar.close()
 
     # Wait for any remaining scoring tasks
-    print(f"  [{short_name}] Waiting for scoring to finish...")
     all_results = await asyncio.gather(*[t for _, _, t in score_tasks])
+    score_bar.close()
 
     # Save completions
-    comp_dir = Path(config["paths"]["completions"])
+    comp_dir = log_dir / "completions"
     comp_dir.mkdir(parents=True, exist_ok=True)
     comp_path = comp_dir / f"{short_name}.jsonl"
     with open(comp_path, "w") as f:
@@ -127,10 +142,9 @@ async def main():
                     {"prompt_id": prompt_id, "completion_idx": idx, "text": text}, f
                 )
                 f.write("\n")
-    print(f"  [{short_name}] Saved completions -> {comp_path}")
 
     # Save scores
-    score_dir = Path(config["paths"]["scores"])
+    score_dir = log_dir / "scores"
     score_dir.mkdir(parents=True, exist_ok=True)
     score_path = score_dir / f"{short_name}.jsonl"
     with open(score_path, "w") as f:
@@ -139,12 +153,12 @@ async def main():
                 {"prompt_id": prompt_id, "completion_idx": idx, "aware": result}, f
             )
             f.write("\n")
-    print(f"  [{short_name}] Saved scores -> {score_path}")
 
     aware_count = sum(1 for r in all_results if r is True)
     valid_count = sum(1 for r in all_results if r is not None)
     rate = aware_count / valid_count if valid_count > 0 else 0
-    print(f"  [{short_name}] Awareness rate: {rate:.2%} ({aware_count}/{valid_count})")
+    print(f"{prefix} Done — awareness: {rate:.2%} ({aware_count}/{valid_count})")
+    print(f"{prefix} Saved: {comp_path}, {score_path}")
 
 
 if __name__ == "__main__":

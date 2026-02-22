@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """Orchestrator: spawn independent GPU workers pulling from a shared model queue."""
 
+import argparse
 import asyncio
 import json
 import os
+import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -13,7 +16,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def gpu_worker(gpu_ids, queue, config_path, prompts_path, scores_dir):
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run FORTRESS eval awareness experiment")
+    parser.add_argument(
+        "--log-dir",
+        type=str,
+        default=None,
+        help="Output directory for this run. Default: runs/<timestamp>",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to config file",
+    )
+    return parser.parse_args()
+
+
+async def gpu_worker(gpu_ids, queue, config_path, prompts_path, log_dir):
     """Pull models from shared queue until empty. Fully independent of other workers."""
     while True:
         try:
@@ -21,7 +41,7 @@ async def gpu_worker(gpu_ids, queue, config_path, prompts_path, scores_dir):
         except asyncio.QueueEmpty:
             break
 
-        score_path = Path(scores_dir) / f"{model['short_name']}.jsonl"
+        score_path = log_dir / "scores" / f"{model['short_name']}.jsonl"
         if score_path.exists():
             print(f"[GPU {gpu_ids}] Skipping {model['short_name']}: already scored")
             queue.task_done()
@@ -33,8 +53,9 @@ async def gpu_worker(gpu_ids, queue, config_path, prompts_path, scores_dir):
             sys.executable,
             "worker.py",
             json.dumps(model),
-            config_path,
-            prompts_path,
+            str(config_path),
+            str(prompts_path),
+            str(log_dir),
             env=env,
             stdout=sys.stdout,
             stderr=sys.stderr,
@@ -47,13 +68,13 @@ async def gpu_worker(gpu_ids, queue, config_path, prompts_path, scores_dir):
             print(f"[GPU {gpu_ids}] Done: {model['short_name']}")
 
 
-def analyze(config):
+def analyze(config, log_dir):
     print("\n" + "=" * 60)
     print("RESULTS: Eval Awareness Rate")
     print("=" * 60)
 
     results = []
-    score_dir = Path(config["paths"]["scores"])
+    score_dir = log_dir / "scores"
 
     for model in config["models"]:
         path = score_dir / f"{model['short_name']}.jsonl"
@@ -81,9 +102,7 @@ def analyze(config):
             f"  {model['short_name']:>15}: {rate:6.2%}  ({aware}/{valid}, {failed} failed)"
         )
 
-    results_dir = Path(config["paths"]["results"])
-    results_dir.mkdir(parents=True, exist_ok=True)
-    csv_path = results_dir / "summary.csv"
+    csv_path = log_dir / "summary.csv"
     with open(csv_path, "w") as f:
         f.write("model,total,aware,failed,awareness_rate\n")
         for r in results:
@@ -94,14 +113,31 @@ def analyze(config):
 
 
 async def main():
-    config_path = "config.yaml"
-    with open(config_path) as f:
+    args = parse_args()
+
+    with open(args.config) as f:
         config = yaml.safe_load(f)
 
-    prompts_path = config["paths"]["prompts"]
-    if not Path(prompts_path).exists():
+    # Resolve log dir
+    if args.log_dir:
+        log_dir = Path(args.log_dir)
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_dir = Path("runs") / timestamp
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # Snapshot config into log dir for reproducibility
+    shutil.copy2(args.config, log_dir / "config.yaml")
+
+    prompts_path = Path(config["paths"]["prompts"])
+    if not prompts_path.exists():
         print(f"ERROR: {prompts_path} not found. Run `uv run python sample_prompts.py` first.")
         sys.exit(1)
+
+    # Copy prompts into log dir for self-contained runs
+    shutil.copy2(prompts_path, log_dir / "prompts.jsonl")
+
+    print(f"Log dir: {log_dir}")
 
     # Shared work queue — workers pull from it, whoever finishes first grabs the next
     queue = asyncio.Queue()
@@ -111,12 +147,12 @@ async def main():
     gpu_sets = config["vllm"]["gpu_sets"]
     await asyncio.gather(
         *[
-            gpu_worker(gpu_ids, queue, config_path, prompts_path, config["paths"]["scores"])
+            gpu_worker(gpu_ids, queue, args.config, prompts_path, log_dir)
             for gpu_ids in gpu_sets
         ]
     )
 
-    analyze(config)
+    analyze(config, log_dir)
 
 
 if __name__ == "__main__":
