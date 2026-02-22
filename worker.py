@@ -3,7 +3,9 @@
 
 import asyncio
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -38,14 +40,33 @@ async def score_one(client, sem, text, scoring_config, score_bar):
                     ],
                 )
                 answer = resp.choices[0].message.content.strip().upper()
-                result = "YES" in answer
-                score_bar.update(1)
-                return result
-            except Exception as e:
+                if answer in ("YES", "NO"):
+                    score_bar.update(1)
+                    return answer == "YES"
+                # Invalid response — retry
+                if attempt == 4:
+                    score_bar.update(1)
+                    return None
+            except Exception:
                 if attempt == 4:
                     score_bar.update(1)
                     return None
                 await asyncio.sleep(2**attempt)
+
+
+def atomic_write_jsonl(path, rows):
+    """Write JSONL to a temp file then rename — no partial files on crash."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            for row in rows:
+                json.dump(row, f)
+                f.write("\n")
+        os.replace(tmp, path)
+    except BaseException:
+        os.unlink(tmp)
+        raise
 
 
 async def main():
@@ -98,6 +119,7 @@ async def main():
     sem = asyncio.Semaphore(scoring_config["max_concurrent"])
 
     completions = {}  # prompt_id -> [str]
+    failed_prompts = []  # prompt_ids where generation failed
     score_tasks = []  # [(prompt_id, completion_idx, Task)]
 
     # Progress bars
@@ -106,22 +128,38 @@ async def main():
 
     async def handle_prompt(prompt, formatted_text):
         """Generate completions for one prompt, fire scoring immediately."""
-        final = None
-        async for output in engine.generate(
-            formatted_text, params, request_id=str(prompt["id"])
-        ):
-            final = output
+        try:
+            final = None
+            async for output in engine.generate(
+                formatted_text, params, request_id=str(prompt["id"])
+            ):
+                final = output
 
-        texts = [o.text for o in final.outputs]
-        completions[prompt["id"]] = texts
-        gen_bar.update(1)
+            if final is None or not final.outputs:
+                print(f"\n{prefix} Generation failed for prompt {prompt['id']}")
+                failed_prompts.append(prompt["id"])
+                gen_bar.update(1)
+                score_bar.total -= sc["n"]
+                score_bar.refresh()
+                return
 
-        # Fire scoring tasks — they start immediately, semaphore throttles
-        for idx, text in enumerate(texts):
-            task = asyncio.create_task(
-                score_one(scorer, sem, text, scoring_config, score_bar)
-            )
-            score_tasks.append((prompt["id"], idx, task))
+            texts = [o.text for o in final.outputs]
+            completions[prompt["id"]] = texts
+            gen_bar.update(1)
+
+            # Fire scoring tasks — they start immediately, semaphore throttles
+            for idx, text in enumerate(texts):
+                task = asyncio.create_task(
+                    score_one(scorer, sem, text, scoring_config, score_bar)
+                )
+                score_tasks.append((prompt["id"], idx, task))
+
+        except Exception as e:
+            print(f"\n{prefix} Error on prompt {prompt['id']}: {e}")
+            failed_prompts.append(prompt["id"])
+            gen_bar.update(1)
+            score_bar.total -= sc["n"]
+            score_bar.refresh()
 
     # Submit all prompts concurrently — engine batches internally
     await asyncio.gather(*[handle_prompt(p, f) for p, f in zip(prompts, formatted)])
@@ -131,33 +169,30 @@ async def main():
     all_results = await asyncio.gather(*[t for _, _, t in score_tasks])
     score_bar.close()
 
-    # Save completions
-    comp_dir = log_dir / "completions"
-    comp_dir.mkdir(parents=True, exist_ok=True)
-    comp_path = comp_dir / f"{short_name}.jsonl"
-    with open(comp_path, "w") as f:
-        for prompt_id in sorted(completions):
-            for idx, text in enumerate(completions[prompt_id]):
-                json.dump(
-                    {"prompt_id": prompt_id, "completion_idx": idx, "text": text}, f
-                )
-                f.write("\n")
+    # Save completions (atomic write)
+    comp_rows = []
+    for prompt_id in sorted(completions):
+        for idx, text in enumerate(completions[prompt_id]):
+            comp_rows.append({"prompt_id": prompt_id, "completion_idx": idx, "text": text})
+    comp_path = log_dir / "completions" / f"{short_name}.jsonl"
+    atomic_write_jsonl(comp_path, comp_rows)
 
-    # Save scores
-    score_dir = log_dir / "scores"
-    score_dir.mkdir(parents=True, exist_ok=True)
-    score_path = score_dir / f"{short_name}.jsonl"
-    with open(score_path, "w") as f:
-        for (prompt_id, idx, _), result in zip(score_tasks, all_results):
-            json.dump(
-                {"prompt_id": prompt_id, "completion_idx": idx, "aware": result}, f
-            )
-            f.write("\n")
+    # Save scores (atomic write)
+    score_rows = []
+    for (prompt_id, idx, _), result in zip(score_tasks, all_results):
+        score_rows.append({"prompt_id": prompt_id, "completion_idx": idx, "aware": result})
+    if failed_prompts:
+        for prompt_id in failed_prompts:
+            score_rows.append({"prompt_id": prompt_id, "completion_idx": -1, "aware": None, "error": "generation_failed"})
+    score_path = log_dir / "scores" / f"{short_name}.jsonl"
+    atomic_write_jsonl(score_path, score_rows)
 
     aware_count = sum(1 for r in all_results if r is True)
     valid_count = sum(1 for r in all_results if r is not None)
     rate = aware_count / valid_count if valid_count > 0 else 0
     print(f"{prefix} Done — awareness: {rate:.2%} ({aware_count}/{valid_count})")
+    if failed_prompts:
+        print(f"{prefix} {len(failed_prompts)} prompts failed generation")
     print(f"{prefix} Saved: {comp_path}, {score_path}")
 
 

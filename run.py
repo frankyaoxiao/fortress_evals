@@ -33,7 +33,7 @@ def parse_args():
     return parser.parse_args()
 
 
-async def gpu_worker(gpu_ids, queue, config_path, prompts_path, log_dir):
+async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir):
     """Pull models from shared queue until empty. Fully independent of other workers."""
     while True:
         try:
@@ -43,9 +43,18 @@ async def gpu_worker(gpu_ids, queue, config_path, prompts_path, log_dir):
 
         score_path = log_dir / "scores" / f"{model['short_name']}.jsonl"
         if score_path.exists():
-            print(f"[GPU {gpu_ids}] Skipping {model['short_name']}: already scored")
-            queue.task_done()
-            continue
+            n_lines = sum(1 for _ in open(score_path))
+            expected = config["sampling"]["n"] * config["dataset"]["num_prompts"]
+            if n_lines >= expected:
+                print(f"[GPU {gpu_ids}] Skipping {model['short_name']}: already scored ({n_lines} lines)")
+                queue.task_done()
+                continue
+            else:
+                print(f"[GPU {gpu_ids}] Incomplete {model['short_name']}: {n_lines}/{expected} lines, re-running")
+                score_path.unlink()
+                comp_path = log_dir / "completions" / f"{model['short_name']}.jsonl"
+                if comp_path.exists():
+                    comp_path.unlink()
 
         print(f"[GPU {gpu_ids}] Starting {model['short_name']}...")
         env = {**os.environ, "CUDA_VISIBLE_DEVICES": gpu_ids}
@@ -137,6 +146,17 @@ async def main():
     # Copy prompts into log dir for self-contained runs
     shutil.copy2(prompts_path, log_dir / "prompts.jsonl")
 
+    # Validate GPU config
+    tp = config["vllm"]["tensor_parallel_size"]
+    for gpu_ids in config["vllm"]["gpu_sets"]:
+        n_gpus = len(gpu_ids.split(","))
+        if n_gpus != tp:
+            print(
+                f"ERROR: gpu_set '{gpu_ids}' has {n_gpus} GPUs but "
+                f"tensor_parallel_size is {tp}"
+            )
+            sys.exit(1)
+
     print(f"Log dir: {log_dir}")
 
     # Shared work queue — workers pull from it, whoever finishes first grabs the next
@@ -147,7 +167,7 @@ async def main():
     gpu_sets = config["vllm"]["gpu_sets"]
     await asyncio.gather(
         *[
-            gpu_worker(gpu_ids, queue, args.config, prompts_path, log_dir)
+            gpu_worker(gpu_ids, queue, config, args.config, prompts_path, log_dir)
             for gpu_ids in gpu_sets
         ]
     )
