@@ -87,8 +87,9 @@ async def main():
     prefix = f"[{short_name}]"
 
     # Format prompts with chat template
+    revision = model.get("revision")
     print(f"{prefix} Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
     formatted = [
         tokenizer.apply_chat_template(
             [{"role": "user", "content": p["adversarial_prompt"]}],
@@ -100,12 +101,13 @@ async def main():
 
     # Create engine
     print(f"{prefix} Loading model...")
-    engine = AsyncLLM.from_engine_args(
-        AsyncEngineArgs(
-            model=model_id,
-            tensor_parallel_size=config["vllm"]["tensor_parallel_size"],
-        )
+    engine_kwargs = dict(
+        model=model_id,
+        tensor_parallel_size=config["vllm"]["tensor_parallel_size"],
     )
+    if revision:
+        engine_kwargs["revision"] = revision
+    engine = AsyncLLM.from_engine_args(AsyncEngineArgs(**engine_kwargs))
 
     # AsyncLLM doesn't support n>1 per request — submit n separate requests per prompt
     n_samples = sc["n"]
@@ -117,8 +119,10 @@ async def main():
     )
 
     # Scoring setup — tasks fire eagerly, semaphore keeps max in flight
+    # max_concurrent is divided across workers by run.py; fall back to config value
     scorer = AsyncOpenAI()
-    sem = asyncio.Semaphore(scoring_config["max_concurrent"])
+    max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
+    sem = asyncio.Semaphore(max_concurrent)
 
     completions = {}  # prompt_id -> [str]
     failed_prompts = []  # prompt_ids where generation failed

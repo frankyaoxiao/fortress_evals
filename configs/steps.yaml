@@ -1,0 +1,63 @@
+models:
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_0100"
+    revision: "step_0100"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_0300"
+    revision: "step_0300"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_0500"
+    revision: "step_0500"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_0700"
+    revision: "step_0700"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_0900"
+    revision: "step_0900"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_1100"
+    revision: "step_1100"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_1300"
+    revision: "step_1300"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_1500"
+    revision: "step_1500"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_1700"
+    revision: "step_1700"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_1900"
+    revision: "step_1900"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_2100"
+    revision: "step_2100"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "step_2300"
+    revision: "step_2300"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+dataset:
+  arrow_path: "/data/artifacts/hf_cache/datasets/ScaleAI___fortress_public/default/0.0.0/0c096becbc75bb12065c8059a53960c7f0d4d35c/fortress_public-train.arrow"
+  num_prompts: 100
+  seed: 42
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 500
+  max_concurrent: 200
+
+vllm:
+  tensor_parallel_size: 4
+  gpu_sets:
+    - "0,1,2,3"
+    - "4,5,6,7"
+
+paths:
+  prompts: "data/sampled_prompts.jsonl"

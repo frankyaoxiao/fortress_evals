@@ -33,7 +33,7 @@ def parse_args():
     return parser.parse_args()
 
 
-async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir):
+async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir, n_prompts):
     """Pull models from shared queue until empty. Fully independent of other workers."""
     while True:
         try:
@@ -44,7 +44,7 @@ async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir)
         score_path = log_dir / "scores" / f"{model['short_name']}.jsonl"
         if score_path.exists():
             n_lines = sum(1 for _ in open(score_path))
-            expected = config["sampling"]["n"] * config["dataset"]["num_prompts"]
+            expected = config["sampling"]["n"] * n_prompts
             if n_lines >= expected:
                 print(f"[GPU {gpu_ids}] Skipping {model['short_name']}: already scored ({n_lines} lines)")
                 queue.task_done()
@@ -57,7 +57,8 @@ async def gpu_worker(gpu_ids, queue, config, config_path, prompts_path, log_dir)
                     comp_path.unlink()
 
         print(f"[GPU {gpu_ids}] Starting {model['short_name']}...")
-        env = {**os.environ, "CUDA_VISIBLE_DEVICES": gpu_ids}
+        scorer_limit = config["scoring"]["max_concurrent"] // len(config["vllm"]["gpu_sets"])
+        env = {**os.environ, "CUDA_VISIBLE_DEVICES": gpu_ids, "SCORER_MAX_CONCURRENT": str(scorer_limit)}
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
             "worker.py",
@@ -157,7 +158,10 @@ async def main():
             )
             sys.exit(1)
 
+    # Count actual prompts in file — used for completeness checks instead of config
+    n_prompts = sum(1 for _ in open(prompts_path))
     print(f"Log dir: {log_dir}")
+    print(f"Prompts: {n_prompts} (from {prompts_path})")
 
     # Shared work queue — workers pull from it, whoever finishes first grabs the next
     queue = asyncio.Queue()
@@ -167,7 +171,7 @@ async def main():
     gpu_sets = config["vllm"]["gpu_sets"]
     await asyncio.gather(
         *[
-            gpu_worker(gpu_ids, queue, config, args.config, prompts_path, log_dir)
+            gpu_worker(gpu_ids, queue, config, args.config, prompts_path, log_dir, n_prompts)
             for gpu_ids in gpu_sets
         ]
     )
