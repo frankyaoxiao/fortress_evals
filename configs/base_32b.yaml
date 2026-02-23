@@ -1,0 +1,35 @@
+models:
+  - id: "allenai/Olmo-3-1125-32B"
+    short_name: "32B-Base"
+    chat_template_from: "allenai/OLMo-3-32B-Think-SFT"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 50
+
+dataset:
+  arrow_path: "/data/artifacts/hf_cache/datasets/ScaleAI___fortress_public/default/0.0.0/0c096becbc75bb12065c8059a53960c7f0d4d35c/fortress_public-train.arrow"
+  num_prompts: 500
+  seed: 42
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 4
+
+slurm:
+  partition: "compute"
+  max_concurrent: 1
+  timeout: "8:00:00"
+  job_name: "fortress-base"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/sampled_prompts_500.jsonl"

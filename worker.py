@@ -129,10 +129,11 @@ async def main():
     n_completions = n_prompts * sc["n"]
     prefix = f"[{short_name}]"
 
-    # Format prompts with chat template
+    # Format prompts with chat template (allow override for base models)
     revision = model.get("revision")
-    print(f"{prefix} Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
+    chat_template_from = model.get("chat_template_from", model_id)
+    print(f"{prefix} Loading tokenizer from {chat_template_from}...")
+    tokenizer = AutoTokenizer.from_pretrained(chat_template_from)
     formatted = [
         tokenizer.apply_chat_template(
             [{"role": "user", "content": p["adversarial_prompt"]}],
