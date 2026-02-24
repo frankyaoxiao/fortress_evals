@@ -37,4 +37,4 @@ slurm:
   cpus_per_node: 64
 
 paths:
-  prompts: "data/sampled_prompts.jsonl"
+  prompts: "data/fortress/sampled_prompts.jsonl"

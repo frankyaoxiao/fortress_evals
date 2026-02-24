@@ -195,7 +195,7 @@ async def main():
 
     prompts_path = Path(config["paths"]["prompts"]).resolve()
     if not prompts_path.exists():
-        print(f"ERROR: {prompts_path} not found. Run `uv run python sample_prompts.py` first.")
+        print(f"ERROR: {prompts_path} not found.")
         sys.exit(1)
 
     shutil.copy2(prompts_path, log_dir / "prompts.jsonl")

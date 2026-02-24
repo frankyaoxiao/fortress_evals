@@ -136,7 +136,7 @@ async def main():
     tokenizer = AutoTokenizer.from_pretrained(chat_template_from)
     formatted = [
         tokenizer.apply_chat_template(
-            [{"role": "user", "content": p["adversarial_prompt"]}],
+            [{"role": "user", "content": p["prompt"]}],
             tokenize=False,
             add_generation_prompt=True,
         )

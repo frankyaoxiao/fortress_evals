@@ -1,0 +1,38 @@
+models:
+  - id: "allenai/Olmo-3-1125-32B"
+    short_name: "32B-Base"
+    chat_template_from: "allenai/OLMo-3-32B-Think-SFT"
+  - id: "allenai/OLMo-3-32B-Think-SFT"
+    short_name: "32B-Think-SFT"
+  - id: "allenai/OLMo-3-32B-Think-DPO"
+    short_name: "32B-Think-DPO"
+  - id: "allenai/OLMo-3-32B-Think"
+    short_name: "32B-Think"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "32B-Think-3.1"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 25
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 2
+
+slurm:
+  partition: "compute"
+  max_concurrent: 4
+  timeout: "8:00:00"
+  job_name: "fortress-hbsr"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
