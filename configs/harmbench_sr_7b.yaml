@@ -1,0 +1,44 @@
+models:
+  - id: "allenai/Olmo-3-1025-7B"
+    short_name: "7B-Base"
+    chat_template_from: "allenai/OLMo-3-7B-Think-SFT"
+  - id: "allenai/OLMo-3-7B-Think-SFT"
+    short_name: "7B-Think-SFT"
+  - id: "allenai/OLMo-3-7B-Think-DPO"
+    short_name: "7B-Think-DPO"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think"
+  - id: "allenai/Olmo-3-1025-7B"
+    short_name: "7B-Stage1"
+    revision: "stage1-step1413814"
+    chat_template_from: "allenai/OLMo-3-7B-Think-SFT"
+  - id: "allenai/Olmo-3-1025-7B"
+    short_name: "7B-Stage2"
+    revision: "stage2-step47684"
+    chat_template_from: "allenai/OLMo-3-7B-Think-SFT"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 25
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "8:00:00"
+  job_name: "fortress-hbsr7b"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
