@@ -91,11 +91,19 @@ async def slurm_worker(slot_id, queue, config, config_path, prompts_path, log_di
 
         short_name = model["short_name"]
 
+        # Per-model prompts override
+        if "prompts" in model:
+            model_prompts = Path(model["prompts"]).resolve()
+            model_n_prompts = sum(1 for _ in open(model_prompts))
+        else:
+            model_prompts = prompts_path
+            model_n_prompts = n_prompts
+
         # Skip if already complete
         score_path = log_dir / "scores" / f"{short_name}.jsonl"
         if score_path.exists():
             n_lines = sum(1 for _ in open(score_path))
-            expected = config["sampling"]["n"] * n_prompts
+            expected = config["sampling"]["n"] * model_n_prompts
             if n_lines >= expected:
                 print(f"[slot {slot_id}] Skipping {short_name}: already scored ({n_lines} lines)")
                 queue.task_done()
@@ -108,7 +116,7 @@ async def slurm_worker(slot_id, queue, config, config_path, prompts_path, log_di
                     comp_path.unlink()
 
         script_path = write_sbatch_script(
-            model, config, config_path, prompts_path, log_dir, slurm_cfg
+            model, config, config_path, model_prompts, log_dir, slurm_cfg
         )
 
         # sbatch --parsable --wait: prints job ID immediately, blocks until done

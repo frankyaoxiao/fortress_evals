@@ -1,0 +1,39 @@
+models:
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "32B-Think-shard0"
+    prompts: "data/dolci_shards/shard0.jsonl"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "32B-Think-shard1"
+    prompts: "data/dolci_shards/shard1.jsonl"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "32B-Think-shard2"
+    prompts: "data/dolci_shards/shard2.jsonl"
+  - id: "allenai/OLMo-3.1-32B-Think"
+    short_name: "32B-Think-shard3"
+    prompts: "data/dolci_shards/shard3.jsonl"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 2
+
+slurm:
+  partition: "compute"
+  max_concurrent: 4
+  timeout: "8:00:00"
+  job_name: "dolci-rl-32b"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/dolci_shards/shard0.jsonl"
