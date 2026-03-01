@@ -1,0 +1,36 @@
+models:
+  - id: "allenai/Olmo-3-32B-Think-DPO"
+    short_name: "32B-DPO-shard0"
+    prompts: "data/dolci_unused_shards/shard0.jsonl"
+  - id: "allenai/Olmo-3-32B-Think-DPO"
+    short_name: "32B-DPO-shard1"
+    prompts: "data/dolci_unused_shards/shard1.jsonl"
+  - id: "allenai/Olmo-3-32B-Think-DPO"
+    short_name: "32B-DPO-shard2"
+    prompts: "data/dolci_unused_shards/shard2.jsonl"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 2
+
+slurm:
+  partition: "compute"
+  max_concurrent: 3
+  timeout: "8:00:00"
+  job_name: "dolci-unused-32b-dpo"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/dolci_unused_shards/shard0.jsonl"
