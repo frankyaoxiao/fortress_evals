@@ -60,6 +60,7 @@ def generate_one_prompt(
     model_after, model_before, input_ids, alpha,
     n_samples, temperature, top_p, max_tokens,
     eos_token_id, pad_token_id,
+    stream_a, stream_b,
 ):
     """Generate n_samples completions for one prompt using LDA.
 
@@ -70,9 +71,12 @@ def generate_one_prompt(
     """
     device = input_ids.device
 
-    # Prefill: forward both models on the prompt
-    out_after = model_after(input_ids, use_cache=True)
-    out_before = model_before(input_ids, use_cache=True)
+    # Prefill: forward both models on the prompt (overlap on separate streams)
+    with torch.cuda.stream(stream_a):
+        out_after = model_after(input_ids, use_cache=True)
+    with torch.cuda.stream(stream_b):
+        out_before = model_before(input_ids, use_cache=True)
+    torch.cuda.synchronize()
 
     # Amplify first-token logits
     logits_a = out_after.logits[:, -1, :]
@@ -87,17 +91,24 @@ def generate_one_prompt(
     kv_after = expand_kv_cache(out_after.past_key_values, n_samples)
     kv_before = expand_kv_cache(out_before.past_key_values, n_samples)
 
-    # Decode
-    generated = first_tokens  # [n, 1]
+    # Decode — pre-allocate output tensor
+    generated = torch.full((n_samples, max_tokens), pad_token_id, dtype=torch.long, device=device)
+    generated[:, 0] = first_tokens.squeeze(-1)
     finished = torch.zeros(n_samples, dtype=torch.bool, device=device)
     next_input = first_tokens
+    gen_len = 1
 
     for _ in range(max_tokens - 1):
         if finished.all():
             break
 
-        out_after = model_after(next_input, past_key_values=kv_after, use_cache=True)
-        out_before = model_before(next_input, past_key_values=kv_before, use_cache=True)
+        # Overlap both forward passes on separate CUDA streams
+        with torch.cuda.stream(stream_a):
+            out_after = model_after(next_input, past_key_values=kv_after, use_cache=True)
+        with torch.cuda.stream(stream_b):
+            out_before = model_before(next_input, past_key_values=kv_before, use_cache=True)
+        torch.cuda.synchronize()
+
         kv_after = out_after.past_key_values
         kv_before = out_before.past_key_values
 
@@ -110,14 +121,15 @@ def generate_one_prompt(
         amp[finished, pad_token_id] = 0.0
 
         next_tokens = sample_top_p(amp, temperature, top_p)  # [n, 1]
-        generated = torch.cat([generated, next_tokens], dim=1)
+        generated[:, gen_len] = next_tokens.squeeze(-1)
+        gen_len += 1
         finished = finished | (next_tokens.squeeze(-1) == eos_token_id)
         next_input = next_tokens
 
     # Trim at first EOS per sample
     results = []
     for i in range(n_samples):
-        tokens = generated[i].tolist()
+        tokens = generated[i, :gen_len].tolist()
         if eos_token_id in tokens:
             tokens = tokens[: tokens.index(eos_token_id)]
         results.append(tokens)
@@ -137,7 +149,11 @@ async def generate_lda(
         {prompt_id: [text, ...]} and failed_prompts is [prompt_id, ...]
     """
     print(f"{prefix} Loading LDA models (α={alpha})...")
-    kwargs = dict(dtype=torch.bfloat16, device_map="auto")
+    kwargs = dict(
+        dtype=torch.bfloat16,
+        device_map="auto",
+        attn_implementation="flash_attention_2",
+    )
     model_after = AutoModelForCausalLM.from_pretrained(
         model_id, revision=revision, **kwargs
     )
@@ -146,6 +162,14 @@ async def generate_lda(
     )
     model_after.eval()
     model_before.eval()
+
+    print(f"{prefix} Compiling models with torch.compile...")
+    model_after = torch.compile(model_after, mode="default")
+    model_before = torch.compile(model_before, mode="default")
+
+    # CUDA streams for overlapping forward passes
+    stream_a = torch.cuda.Stream()
+    stream_b = torch.cuda.Stream()
 
     eos_id = tokenizer.eos_token_id
     pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else eos_id
@@ -167,6 +191,7 @@ async def generate_lda(
                 model_after, model_before, input_ids, alpha,
                 n_samples, temperature, top_p, max_tokens,
                 eos_id, pad_id,
+                stream_a, stream_b,
             )
 
             texts = [

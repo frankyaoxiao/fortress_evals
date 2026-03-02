@@ -1,0 +1,67 @@
+models:
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0025"
+    revision: "step_0025"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0050"
+    revision: "step_0050"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0075"
+    revision: "step_0075"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0100"
+    revision: "step_0100"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0125"
+    revision: "step_0125"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0150"
+    revision: "step_0150"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0175"
+    revision: "step_0175"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0200"
+    revision: "step_0200"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 0.4
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "22:00:00"
+  job_name: "lda-hbsr-7b"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
