@@ -143,94 +143,127 @@ async def main():
         for p in prompts
     ]
 
-    # Create engine
-    print(f"{prefix} Loading model...")
-    engine_kwargs = dict(
-        model=model_id,
-        tensor_parallel_size=config["vllm"]["tensor_parallel_size"],
-    )
-    if revision:
-        engine_kwargs["revision"] = revision
-    engine = AsyncLLM.from_engine_args(AsyncEngineArgs(**engine_kwargs))
-
-    # AsyncLLM doesn't support n>1 per request — submit n separate requests per prompt
+    # --- Generation ---
+    use_lda = "lda_base" in model and "lda_alpha" in model
     n_samples = sc["n"]
-    params = SamplingParams(
-        temperature=sc["temperature"],
-        top_p=sc["top_p"],
-        max_tokens=sc["max_tokens"],
-        n=1,
-    )
 
-    # Scoring setup — tasks fire eagerly, semaphore keeps max in flight
-    # max_concurrent is divided across workers by run.py; fall back to config value
-    scorer = AsyncOpenAI()
-    max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
-    sem = asyncio.Semaphore(max_concurrent)
+    if use_lda:
+        from lda import generate_lda
 
-    completions = {}  # prompt_id -> [str]
-    failed_prompts = []  # prompt_ids where generation failed
-    score_tasks = []  # [(prompt_id, completion_idx, Task)]
+        completions, failed_prompts = await generate_lda(
+            model_id=model_id,
+            base_model_id=model["lda_base"],
+            alpha=model["lda_alpha"],
+            prompts=prompts,
+            formatted=formatted,
+            tokenizer=tokenizer,
+            n_samples=n_samples,
+            temperature=sc["temperature"],
+            top_p=sc["top_p"],
+            max_tokens=sc["max_tokens"],
+            revision=revision,
+            base_revision=model.get("lda_base_revision"),
+            prefix=prefix,
+        )
+    else:
+        # vLLM path — scoring fires eagerly during generation
+        print(f"{prefix} Loading model...")
+        engine_kwargs = dict(
+            model=model_id,
+            tensor_parallel_size=config["vllm"]["tensor_parallel_size"],
+        )
+        if revision:
+            engine_kwargs["revision"] = revision
+        engine = AsyncLLM.from_engine_args(AsyncEngineArgs(**engine_kwargs))
 
-    # Progress bars — track individual completions for generation too
-    gen_bar = tqdm(total=n_completions, desc=f"{prefix} Generating", unit="comp", position=0)
-    score_bar = tqdm(total=n_completions, desc=f"{prefix} Scoring", unit="comp", position=1)
+        params = SamplingParams(
+            temperature=sc["temperature"],
+            top_p=sc["top_p"],
+            max_tokens=sc["max_tokens"],
+            n=1,
+        )
 
-    async def handle_sample(prompt, formatted_text, sample_idx):
-        """Generate one completion, fire scoring immediately."""
-        try:
-            request_id = f"{prompt['id']}_{sample_idx}"
-            final = None
-            async for output in engine.generate(
-                formatted_text, params, request_id=request_id
-            ):
-                final = output
+        scorer = AsyncOpenAI()
+        max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
+        sem = asyncio.Semaphore(max_concurrent)
 
-            if final is None or not final.outputs:
-                print(f"\n{prefix} Generation failed: prompt {prompt['id']} sample {sample_idx}")
+        completions = {}
+        failed_prompts = []
+        score_tasks = []
+
+        gen_bar = tqdm(total=n_completions, desc=f"{prefix} Generating", unit="comp", position=0)
+        score_bar = tqdm(total=n_completions, desc=f"{prefix} Scoring", unit="comp", position=1)
+
+        async def handle_sample(prompt, formatted_text, sample_idx):
+            try:
+                request_id = f"{prompt['id']}_{sample_idx}"
+                final = None
+                async for output in engine.generate(
+                    formatted_text, params, request_id=request_id
+                ):
+                    final = output
+
+                if final is None or not final.outputs:
+                    print(f"\n{prefix} Generation failed: prompt {prompt['id']} sample {sample_idx}")
+                    return None
+
+                text = final.outputs[0].text
+                gen_bar.update(1)
+
+                # Fire scoring immediately
+                task = asyncio.create_task(
+                    score_one(scorer, sem, text, scoring_config, score_bar)
+                )
+                score_tasks.append((prompt["id"], sample_idx, task))
+                return text
+
+            except Exception as e:
+                print(f"\n{prefix} Error: prompt {prompt['id']} sample {sample_idx}: {e}")
                 return None
 
-            text = final.outputs[0].text
-            gen_bar.update(1)
+        all_coros = []
+        for p, f in zip(prompts, formatted):
+            for sample_idx in range(n_samples):
+                all_coros.append(handle_sample(p, f, sample_idx))
 
-            # Fire scoring task immediately
-            task = asyncio.create_task(
-                score_one(scorer, sem, text, scoring_config, score_bar)
-            )
-            score_tasks.append((prompt["id"], sample_idx, task))
-            return text
+        results = await asyncio.gather(*all_coros)
 
-        except Exception as e:
-            print(f"\n{prefix} Error: prompt {prompt['id']} sample {sample_idx}: {e}")
-            return None
+        idx = 0
+        for p in prompts:
+            texts = []
+            for sample_idx in range(n_samples):
+                if results[idx] is not None:
+                    texts.append(results[idx])
+                idx += 1
+            if texts:
+                completions[p["id"]] = texts
+            else:
+                failed_prompts.append(p["id"])
+        gen_bar.close()
 
-    # Submit all prompts × n_samples concurrently — engine batches internally
-    all_coros = []
-    for p, f in zip(prompts, formatted):
-        for sample_idx in range(n_samples):
-            all_coros.append(handle_sample(p, f, sample_idx))
+        all_results = await asyncio.gather(*[t for _, _, t in score_tasks])
+        score_bar.close()
+        engine.shutdown()
 
-    results = await asyncio.gather(*all_coros)
+    if use_lda:
+        # LDA: score after generation completes
+        scorer = AsyncOpenAI()
+        max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
+        sem = asyncio.Semaphore(max_concurrent)
 
-    # Collect completions by prompt
-    idx = 0
-    for p in prompts:
-        texts = []
-        for sample_idx in range(n_samples):
-            if results[idx] is not None:
-                texts.append(results[idx])
-            idx += 1
-        if texts:
-            completions[p["id"]] = texts
-        else:
-            failed_prompts.append(p["id"])
-    gen_bar.close()
+        score_tasks = []
+        score_bar = tqdm(total=n_completions, desc=f"{prefix} Scoring", unit="comp", position=0)
+        for prompt_id, texts in completions.items():
+            for idx, text in enumerate(texts):
+                task = asyncio.create_task(
+                    score_one(scorer, sem, text, scoring_config, score_bar)
+                )
+                score_tasks.append((prompt_id, idx, task))
 
-    # Wait for any remaining scoring tasks
-    all_results = await asyncio.gather(*[t for _, _, t in score_tasks])
-    score_bar.close()
+        all_results = await asyncio.gather(*[t for _, _, t in score_tasks])
+        score_bar.close()
 
-    # Save completions (atomic write)
+    # --- Save (shared by both paths) ---
     comp_rows = []
     for prompt_id in sorted(completions):
         for idx, text in enumerate(completions[prompt_id]):
@@ -238,7 +271,6 @@ async def main():
     comp_path = log_dir / "completions" / f"{short_name}.jsonl"
     atomic_write_jsonl(comp_path, comp_rows)
 
-    # Save scores (atomic write)
     score_rows = []
     for (prompt_id, idx, _), result in zip(score_tasks, all_results):
         if result is not None:
@@ -254,9 +286,6 @@ async def main():
             score_rows.append({"prompt_id": prompt_id, "completion_idx": -1, "aware": None, "error": "generation_failed"})
     score_path = log_dir / "scores" / f"{short_name}.jsonl"
     atomic_write_jsonl(score_path, score_rows)
-
-    # Shut down engine to free GPU memory
-    engine.shutdown()
 
     aware_count = sum(1 for r in all_results if r is not None and r["aware"])
     valid_count = sum(1 for r in all_results if r is not None)

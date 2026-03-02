@@ -12,4 +12,5 @@ dependencies = [
     "tqdm",
     "matplotlib>=3.10.8",
     "scipy>=1.15.3",
+    "accelerate>=1.12.0",
 ]
