@@ -111,9 +111,6 @@ async def slurm_worker(slot_id, queue, config, config_path, prompts_path, log_di
             else:
                 print(f"[slot {slot_id}] Incomplete {short_name}: {n_lines}/{expected} lines, re-running")
                 score_path.unlink()
-                comp_path = log_dir / "completions" / f"{short_name}.jsonl"
-                if comp_path.exists():
-                    comp_path.unlink()
 
         script_path = write_sbatch_script(
             model, config, config_path, model_prompts, log_dir, slurm_cfg
