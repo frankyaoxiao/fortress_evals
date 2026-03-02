@@ -7,6 +7,9 @@ Amplifies behavioral differences between two model checkpoints:
 Reference: https://www.goodfire.ai/research/model-diff-amplification
 """
 
+import json
+from collections import defaultdict
+
 import torch
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, DynamicCache
@@ -17,7 +20,6 @@ def expand_kv_cache(past_key_values, n):
     new_cache = DynamicCache()
     for layer_idx in range(len(past_key_values)):
         key, value = past_key_values[layer_idx]
-        # .contiguous() forces a copy so in-place updates don't corrupt shared memory
         new_cache.update(
             key.expand(n, -1, -1, -1).contiguous(),
             value.expand(n, -1, -1, -1).contiguous(),
@@ -43,11 +45,9 @@ def sample_top_p(logits, temperature, top_p):
     sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
     cumulative_probs = torch.cumsum(torch.softmax(sorted_logits, dim=-1), dim=-1)
 
-    # Keep tokens where cumulative prob (excluding current) < top_p
     sorted_mask = (cumulative_probs - torch.softmax(sorted_logits, dim=-1)) >= top_p
     sorted_logits[sorted_mask] = float("-inf")
 
-    # Scatter back to original positions
     filtered = torch.full_like(logits, float("-inf"))
     filtered.scatter_(1, sorted_indices, sorted_logits)
 
@@ -71,7 +71,7 @@ def generate_one_prompt(
     """
     device = input_ids.device
 
-    # Prefill: forward both models on the prompt (overlap on separate streams)
+    # Prefill: overlap both models on separate CUDA streams
     with torch.cuda.stream(stream_a):
         out_after = model_after(input_ids, use_cache=True)
     with torch.cuda.stream(stream_b):
@@ -83,11 +83,9 @@ def generate_one_prompt(
     logits_b = out_before.logits[:, -1, :]
     amplified = torch.clamp(logits_a + alpha * (logits_a - logits_b), -100.0, 100.0)
 
-    # Expand to batch for n_samples
     amplified = amplified.expand(n_samples, -1)
     first_tokens = sample_top_p(amplified, temperature, top_p)  # [n, 1]
 
-    # Expand KV caches
     kv_after = expand_kv_cache(out_after.past_key_values, n_samples)
     kv_before = expand_kv_cache(out_before.past_key_values, n_samples)
 
@@ -102,7 +100,6 @@ def generate_one_prompt(
         if finished.all():
             break
 
-        # Overlap both forward passes on separate CUDA streams
         with torch.cuda.stream(stream_a):
             out_after = model_after(next_input, past_key_values=kv_after, use_cache=True)
         with torch.cuda.stream(stream_b):
@@ -116,7 +113,6 @@ def generate_one_prompt(
         logits_b = out_before.logits[:, -1, :]
         amp = torch.clamp(logits_a + alpha * (logits_a - logits_b), -100.0, 100.0)
 
-        # Force pad on finished sequences
         amp[finished] = float("-inf")
         amp[finished, pad_token_id] = 0.0
 
@@ -126,7 +122,6 @@ def generate_one_prompt(
         finished = finished | (next_tokens.squeeze(-1) == eos_token_id)
         next_input = next_tokens
 
-    # Trim at first EOS per sample
     results = []
     for i in range(n_samples):
         tokens = generated[i, :gen_len].tolist()
@@ -136,29 +131,84 @@ def generate_one_prompt(
     return results
 
 
+def load_completed(comp_path, n_samples):
+    """Load completed completions from an incremental file.
+
+    Reads the file once. Returns completed prompt texts (only prompts with
+    exactly n_samples completions) and rewrites the file to discard any
+    partial/orphaned rows so appends from a resumed run stay clean.
+    """
+    if not comp_path.exists():
+        return {}
+
+    texts_by_prompt = defaultdict(list)
+    lines_by_prompt = defaultdict(list)
+    with open(comp_path) as f:
+        for line in f:
+            try:
+                row = json.loads(line)
+                pid = row["prompt_id"]
+                texts_by_prompt[pid].append(row["text"])
+                lines_by_prompt[pid].append(line)
+            except json.JSONDecodeError:
+                break
+
+    # Keep only fully-complete prompts
+    complete = {
+        pid: texts[:n_samples]
+        for pid, texts in texts_by_prompt.items()
+        if len(texts) >= n_samples
+    }
+
+    # Rewrite file without partial/orphaned rows
+    if set(complete) != set(texts_by_prompt):
+        with open(comp_path, "w") as f:
+            for pid in complete:
+                f.writelines(lines_by_prompt[pid][:n_samples])
+
+    return complete
+
+
 async def generate_lda(
     model_id, base_model_id, alpha,
     prompts, formatted, tokenizer,
     n_samples, temperature, top_p, max_tokens,
     revision=None, base_revision=None, prefix="",
+    comp_path=None,
 ):
     """Generate completions using Logit Diff Amplification.
+
+    Args:
+        comp_path: If provided, save completions incrementally and resume
+                   from partial results on resubmit.
 
     Returns:
         (completions, failed_prompts) where completions is
         {prompt_id: [text, ...]} and failed_prompts is [prompt_id, ...]
     """
+    # Resume: single read, get completed texts and clean up partial rows
+    completions = {}
+    if comp_path:
+        comp_path.parent.mkdir(parents=True, exist_ok=True)
+        completions = load_completed(comp_path, n_samples)
+        if completions:
+            print(f"{prefix} Resuming — {len(completions)} prompts already on disk")
+
+    done_ids = set(completions)
+    remaining = [(p, f) for p, f in zip(prompts, formatted) if p["id"] not in done_ids]
+
+    if not remaining:
+        print(f"{prefix} All prompts already completed")
+        return completions, []
+
     print(f"{prefix} Loading LDA models (α={alpha})...")
-    kwargs = dict(
-        dtype=torch.bfloat16,
-        device_map="auto",
-        attn_implementation="flash_attention_2",
-    )
     model_after = AutoModelForCausalLM.from_pretrained(
-        model_id, revision=revision, **kwargs
+        model_id, revision=revision,
+        dtype=torch.bfloat16, device_map="auto", attn_implementation="flash_attention_2",
     )
     model_before = AutoModelForCausalLM.from_pretrained(
-        base_model_id, revision=base_revision, **kwargs
+        base_model_id, revision=base_revision,
+        dtype=torch.bfloat16, device_map="auto", attn_implementation="flash_attention_2",
     )
     model_after.eval()
     model_before.eval()
@@ -167,22 +217,20 @@ async def generate_lda(
     model_after = torch.compile(model_after, mode="default")
     model_before = torch.compile(model_before, mode="default")
 
-    # CUDA streams for overlapping forward passes
     stream_a = torch.cuda.Stream()
     stream_b = torch.cuda.Stream()
 
     eos_id = tokenizer.eos_token_id
     pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else eos_id
 
-    completions = {}
     failed_prompts = []
     gen_bar = tqdm(
-        total=len(prompts) * n_samples,
+        total=len(remaining) * n_samples,
         desc=f"{prefix} Generating (LDA α={alpha})",
         unit="comp",
     )
 
-    for prompt, fmt_text in zip(prompts, formatted):
+    for prompt, fmt_text in remaining:
         try:
             input_ids = tokenizer.encode(fmt_text, return_tensors="pt")
             input_ids = input_ids.to(model_after.device)
@@ -201,6 +249,12 @@ async def generate_lda(
             completions[prompt["id"]] = texts
             gen_bar.update(n_samples)
 
+            if comp_path:
+                with open(comp_path, "a") as f:
+                    for idx, text in enumerate(texts):
+                        json.dump({"prompt_id": prompt["id"], "completion_idx": idx, "text": text}, f)
+                        f.write("\n")
+
         except Exception as e:
             print(f"\n{prefix} Error prompt {prompt['id']}: {e}")
             failed_prompts.append(prompt["id"])
@@ -208,7 +262,6 @@ async def generate_lda(
 
     gen_bar.close()
 
-    # Free GPU memory
     del model_after, model_before
     torch.cuda.empty_cache()
 

@@ -150,6 +150,7 @@ async def main():
     if use_lda:
         from lda import generate_lda
 
+        comp_path = log_dir / "completions" / f"{short_name}.jsonl"
         completions, failed_prompts = await generate_lda(
             model_id=model_id,
             base_model_id=model["lda_base"],
@@ -164,6 +165,7 @@ async def main():
             revision=revision,
             base_revision=model.get("lda_base_revision"),
             prefix=prefix,
+            comp_path=comp_path,
         )
     else:
         # vLLM path — scoring fires eagerly during generation

@@ -23,6 +23,18 @@ models:
   - id: "allenai/OLMo-3-7B-Think"
     short_name: "7B-Think-step0200"
     revision: "step_0200"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0225"
+    revision: "step_0225"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0250"
+    revision: "step_0250"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0275"
+    revision: "step_0275"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0300"
+    revision: "step_0300"
 
 sampling:
   temperature: 0.6
