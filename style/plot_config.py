@@ -51,8 +51,8 @@ def setup_style(style_file=None, verbose=False):
             fm.fontManager.addfont(SUISSE_REGULAR)
             family = fm.FontProperties(fname=SUISSE_REGULAR).get_name()
             mpl.rcParams['font.family'] = family
-            mpl.rcParams['font.sans-serif'] = [family] + [
-                f for f in mpl.rcParams.get('font.sans-serif', []) if f != family
+            mpl.rcParams['font.sans-serif'] = [family, 'DejaVu Sans'] + [
+                f for f in mpl.rcParams.get('font.sans-serif', []) if f not in (family, 'DejaVu Sans')
             ]
             if verbose:
                 print(f"✓ Loaded custom font: {family}")

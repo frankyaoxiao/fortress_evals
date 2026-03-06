@@ -3,8 +3,8 @@ name = "fortress-eval"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "vllm",
-    "openai",
+    "vllm>=0.16.0",
+    "openai>=2.26.0",
     "datasets",
     "transformers",
     "pyyaml",
@@ -13,4 +13,16 @@ dependencies = [
     "matplotlib>=3.10.8",
     "scipy>=1.15.3",
     "accelerate>=1.12.0",
+    "inspect-ai>=0.3.188",
+    "inspect-evals>=0.4.0",
+    "aiohttp>=3.13.3",
+    "instruction-following-eval",
 ]
+
+[tool.uv]
+override-dependencies = [
+    "transformers>=5.0",
+]
+
+[tool.uv.sources]
+instruction-following-eval = { git = "https://github.com/josejg/instruction_following_eval" }

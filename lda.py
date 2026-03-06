@@ -174,7 +174,7 @@ async def generate_lda(
     prompts, formatted, tokenizer,
     n_samples, temperature, top_p, max_tokens,
     revision=None, base_revision=None, prefix="",
-    comp_path=None,
+    comp_path=None, batch_size=5,
 ):
     """Generate completions using Logit Diff Amplification.
 
@@ -235,12 +235,16 @@ async def generate_lda(
             input_ids = tokenizer.encode(fmt_text, return_tensors="pt")
             input_ids = input_ids.to(model_after.device)
 
-            token_lists = generate_one_prompt(
-                model_after, model_before, input_ids, alpha,
-                n_samples, temperature, top_p, max_tokens,
-                eos_id, pad_id,
-                stream_a, stream_b,
-            )
+            token_lists = []
+            for batch_start in range(0, n_samples, batch_size):
+                batch_n = min(batch_size, n_samples - batch_start)
+                token_lists.extend(generate_one_prompt(
+                    model_after, model_before, input_ids, alpha,
+                    batch_n, temperature, top_p, max_tokens,
+                    eos_id, pad_id,
+                    stream_a, stream_b,
+                ))
+                torch.cuda.empty_cache()
 
             texts = [
                 tokenizer.decode(toks, skip_special_tokens=True)

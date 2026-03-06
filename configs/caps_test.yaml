@@ -1,0 +1,27 @@
+models:
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-test"
+    revision: "step_0025"
+
+evals:
+  - task: "inspect_evals/ifeval"
+    limit: 1
+  - task: "inspect_evals/math"
+    limit: 1
+    task_args:
+      shuffle: false
+  - task: "inspect_evals/mbpp"
+    limit: 1
+    sandbox: "local"
+
+vllm:
+  tensor_parallel_size: 1
+  max_connections: 10
+
+slurm:
+  partition: "compute"
+  max_concurrent: 1
+  timeout: "1:00:00"
+  job_name: "caps-test"
+  gpus_per_node: 8
+  cpus_per_node: 64
