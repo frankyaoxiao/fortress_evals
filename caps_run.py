@@ -51,6 +51,7 @@ def write_sbatch_script(model, config, config_path, log_dir, slurm_cfg):
 
 set -euo pipefail
 cd {REPO_DIR}
+set -a; source .env 2>/dev/null || true; set +a
 
 uv run python caps_worker.py \\
     '{model_json}' \\

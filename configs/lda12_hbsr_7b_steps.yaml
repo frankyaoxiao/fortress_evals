@@ -76,7 +76,7 @@ vllm:
   tensor_parallel_size: 1
 
 slurm:
-  partition: "compute"
+  partition: "dev"
   max_concurrent: 8
   timeout: "22:00:00"
   job_name: "lda-hbsr-7b"

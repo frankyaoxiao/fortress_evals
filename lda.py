@@ -18,11 +18,10 @@ from transformers import AutoModelForCausalLM, DynamicCache
 def expand_kv_cache(past_key_values, n):
     """Expand a DynamicCache from batch=1 to batch=n."""
     new_cache = DynamicCache()
-    for layer_idx in range(len(past_key_values)):
-        key, value = past_key_values[layer_idx]
+    for layer_idx, layer in enumerate(past_key_values.layers):
         new_cache.update(
-            key.expand(n, -1, -1, -1).contiguous(),
-            value.expand(n, -1, -1, -1).contiguous(),
+            layer.keys.expand(n, -1, -1, -1).contiguous(),
+            layer.values.expand(n, -1, -1, -1).contiguous(),
             layer_idx,
         )
     return new_cache
@@ -56,38 +55,47 @@ def sample_top_p(logits, temperature, top_p):
 
 
 @torch.no_grad()
-def generate_one_prompt(
-    model_after, model_before, input_ids, alpha,
-    n_samples, temperature, top_p, max_tokens,
-    eos_token_id, pad_token_id,
-    stream_a, stream_b,
-):
-    """Generate n_samples completions for one prompt using LDA.
+def prefill(model_after, model_before, input_ids, alpha, stream_a, stream_b):
+    """Run prefill on both models, return KV caches and amplified first-token logits.
 
-    Args:
-        input_ids: [1, seq_len] tokenized prompt
     Returns:
-        list of n_samples token-id lists (variable length, EOS trimmed)
+        (kv_after, kv_before, amplified_logits) where KV caches are batch=1
+        and amplified_logits is [1, vocab].
     """
-    device = input_ids.device
-
-    # Prefill: overlap both models on separate CUDA streams
     with torch.cuda.stream(stream_a):
         out_after = model_after(input_ids, use_cache=True)
     with torch.cuda.stream(stream_b):
         out_before = model_before(input_ids, use_cache=True)
     torch.cuda.synchronize()
 
-    # Amplify first-token logits
     logits_a = out_after.logits[:, -1, :]
     logits_b = out_before.logits[:, -1, :]
     amplified = torch.clamp(logits_a + alpha * (logits_a - logits_b), -100.0, 100.0)
 
-    amplified = amplified.expand(n_samples, -1)
-    first_tokens = sample_top_p(amplified, temperature, top_p)  # [n, 1]
+    return out_after.past_key_values, out_before.past_key_values, amplified
 
-    kv_after = expand_kv_cache(out_after.past_key_values, n_samples)
-    kv_before = expand_kv_cache(out_before.past_key_values, n_samples)
+
+@torch.no_grad()
+def decode_batch(
+    model_after, model_before, kv_after_base, kv_before_base,
+    amplified_logits, alpha, n_samples, temperature, top_p,
+    max_tokens, eos_token_id, pad_token_id, stream_a, stream_b,
+):
+    """Decode one batch given pre-computed prefill results.
+
+    Args:
+        kv_after_base, kv_before_base: batch=1 KV caches from prefill
+        amplified_logits: [1, vocab] amplified first-token logits
+    Returns:
+        list of n_samples token-id lists (variable length, EOS trimmed)
+    """
+    device = amplified_logits.device
+
+    amp_expanded = amplified_logits.expand(n_samples, -1)
+    first_tokens = sample_top_p(amp_expanded, temperature, top_p)  # [n, 1]
+
+    kv_after = expand_kv_cache(kv_after_base, n_samples)
+    kv_before = expand_kv_cache(kv_before_base, n_samples)
 
     # Decode — pre-allocate output tensor
     generated = torch.full((n_samples, max_tokens), pad_token_id, dtype=torch.long, device=device)
@@ -235,16 +243,24 @@ async def generate_lda(
             input_ids = tokenizer.encode(fmt_text, return_tensors="pt")
             input_ids = input_ids.to(model_after.device)
 
+            # Prefill once, decode in batches
+            kv_a, kv_b, amp_logits = prefill(
+                model_after, model_before, input_ids, alpha,
+                stream_a, stream_b,
+            )
+
             token_lists = []
             for batch_start in range(0, n_samples, batch_size):
                 batch_n = min(batch_size, n_samples - batch_start)
-                token_lists.extend(generate_one_prompt(
-                    model_after, model_before, input_ids, alpha,
-                    batch_n, temperature, top_p, max_tokens,
-                    eos_id, pad_id,
+                token_lists.extend(decode_batch(
+                    model_after, model_before, kv_a, kv_b,
+                    amp_logits, alpha, batch_n, temperature, top_p,
+                    max_tokens, eos_id, pad_id,
                     stream_a, stream_b,
                 ))
                 torch.cuda.empty_cache()
+
+            del kv_a, kv_b, amp_logits
 
             texts = [
                 tokenizer.decode(toks, skip_special_tokens=True)

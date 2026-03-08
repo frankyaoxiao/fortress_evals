@@ -6,6 +6,7 @@ import json
 import os
 import signal
 import sys
+import zipfile
 from pathlib import Path
 
 import yaml
@@ -29,6 +30,27 @@ async def wait_for_server(base_url, server_proc, timeout=300):
             pass
         await asyncio.sleep(2)
     raise TimeoutError(f"vLLM server not ready after {timeout}s")
+
+
+def find_successful_eval(log_dir, task_name):
+    """Check if a successful .eval file already exists for this task.
+
+    Returns the path if found, None otherwise.
+    """
+    # task_name is like "inspect_evals/ifeval" — the filename contains the short name
+    short_task = task_name.split("/")[-1]  # "ifeval", "math", "mbpp"
+    for eval_file in log_dir.glob("*.eval"):
+        if short_task not in eval_file.name:
+            continue
+        try:
+            with zipfile.ZipFile(eval_file) as z:
+                with z.open("header.json") as f:
+                    header = json.load(f)
+                if header.get("status") == "success":
+                    return eval_file
+        except (zipfile.BadZipFile, KeyError, json.JSONDecodeError):
+            continue
+    return None
 
 
 async def run_eval(task, model_name, log_dir, max_connections, extra_args):
@@ -69,8 +91,24 @@ async def main():
     model_log_dir = log_dir / "logs" / short_name
     model_log_dir.mkdir(parents=True, exist_ok=True)
 
+    # --- Check which evals need running ---
+    evals_to_run = []
+    for eval_cfg in config["evals"]:
+        task = eval_cfg["task"]
+        existing = find_successful_eval(model_log_dir, task)
+        if existing:
+            print(f"{prefix} Skipping {task}: already succeeded ({existing.name})")
+            continue
+        evals_to_run.append(eval_cfg)
+
+    if not evals_to_run:
+        print(f"{prefix} All evals already succeeded")
+        (model_log_dir / ".done").touch()
+        return
+
     # --- Start vLLM server ---
-    port = 8000 + int(os.environ.get("SLURM_LOCALID", 0))
+    # Use SLURM_JOB_ID to avoid port collisions when multiple jobs share a node
+    port = 10000 + (int(os.environ.get("SLURM_JOB_ID", 0)) % 50000)
     server_cmd = [
         sys.executable, "-m", "vllm.entrypoints.openai.api_server",
         "--model", model_id,
@@ -91,9 +129,9 @@ async def main():
         await wait_for_server(f"http://localhost:{port}", server_proc)
         print(f"{prefix} vLLM server ready")
 
-        # --- Run all evals in parallel ---
+        # --- Run pending evals in parallel ---
         tasks = []
-        for eval_cfg in config["evals"]:
+        for eval_cfg in evals_to_run:
             extra_args = []
             if "limit" in eval_cfg:
                 extra_args.extend(["--limit", str(eval_cfg["limit"])])
@@ -115,9 +153,16 @@ async def main():
         if n_failed:
             print(f"{prefix} {n_failed}/{len(results)} evals failed")
         else:
-            print(f"{prefix} All {len(results)} evals completed successfully")
-            # Write a marker file for skip logic
-            (model_log_dir / ".done").touch()
+            # Check if ALL evals (including previously succeeded ones) are now done
+            all_done = all(
+                find_successful_eval(model_log_dir, e["task"]) is not None
+                for e in config["evals"]
+            )
+            if all_done:
+                print(f"{prefix} All evals completed successfully")
+                (model_log_dir / ".done").touch()
+            else:
+                print(f"{prefix} Some evals still missing")
 
     finally:
         if server_proc.returncode is None:

@@ -1,0 +1,41 @@
+models:
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0050"
+    revision: "step_0050"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0100"
+    revision: "step_0100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0150"
+    revision: "step_0150"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0200"
+    revision: "step_0200"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0250"
+    revision: "step_0250"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-HF-step0300"
+    revision: "step_0300"
+
+evals:
+  - task: "inspect_evals/ifeval"
+  - task: "inspect_evals/math"
+    limit: 500
+    task_args:
+      shuffle: false
+      grader_model: "openai/gpt-5-mini"
+  - task: "inspect_evals/mbpp"
+    sandbox: "local"
+
+vllm:
+  tensor_parallel_size: 1
+  max_connections: 10
+
+slurm:
+  partition: "compute"
+  max_concurrent: 6
+  timeout: "4:00:00"
+  job_name: "caps-hf"
+  gpus_per_node: 8
+  cpus_per_node: 64
