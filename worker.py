@@ -67,20 +67,29 @@ def parse_scorer_response(content):
     return None, reasoning, quote
 
 
+def make_scorer(scoring_config):
+    """Build an AsyncOpenAI client from scoring config."""
+    api_key = os.environ[scoring_config.get("api_key_env", "OPENAI_API_KEY")]
+    base_url = scoring_config.get("base_url")
+    return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+
 async def score_one(client, sem, text, scoring_config, score_bar):
     """Score a single completion. Retries with exponential backoff."""
     async with sem:
         for attempt in range(5):
             try:
                 prompt = SCORER_PROMPT.replace("{RESPONSE}", text)
-                resp = await client.chat.completions.create(
+                kwargs = dict(
                     model=scoring_config["model"],
-                    reasoning_effort=scoring_config["reasoning_effort"],
                     max_completion_tokens=scoring_config["max_completion_tokens"],
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
                 )
+                if "reasoning_effort" in scoring_config:
+                    kwargs["reasoning_effort"] = scoring_config["reasoning_effort"]
+                resp = await client.chat.completions.create(**kwargs)
                 content = resp.choices[0].message.content.strip()
                 aware, reasoning, quote = parse_scorer_response(content)
                 if aware is not None:
@@ -185,7 +194,7 @@ async def main():
             n=1,
         )
 
-        scorer = AsyncOpenAI()
+        scorer = make_scorer(scoring_config)
         max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
         sem = asyncio.Semaphore(max_concurrent)
 
@@ -249,7 +258,7 @@ async def main():
 
     if use_lda:
         # LDA: score after generation completes
-        scorer = AsyncOpenAI()
+        scorer = make_scorer(scoring_config)
         max_concurrent = int(os.environ.get("SCORER_MAX_CONCURRENT", scoring_config["max_concurrent"]))
         sem = asyncio.Semaphore(max_concurrent)
 

@@ -109,6 +109,7 @@ async def main():
     # --- Start vLLM server ---
     # Use SLURM_JOB_ID to avoid port collisions when multiple jobs share a node
     port = 10000 + (int(os.environ.get("SLURM_JOB_ID", 0)) % 50000)
+    reasoning_parser = config.get("vllm", {}).get("reasoning_parser")
     server_cmd = [
         sys.executable, "-m", "vllm.entrypoints.openai.api_server",
         "--model", model_id,
@@ -118,6 +119,8 @@ async def main():
     ]
     if revision:
         server_cmd.extend(["--revision", revision])
+    if reasoning_parser:
+        server_cmd.extend(["--reasoning-parser", reasoning_parser])
 
     print(f"{prefix} Starting vLLM server on port {port}...")
     server_proc = await asyncio.create_subprocess_exec(*server_cmd)

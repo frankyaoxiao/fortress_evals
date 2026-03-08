@@ -1,0 +1,110 @@
+models:
+  # Shard 0 (first 257 prompts)
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_50"
+    short_name: "7B-Think-step0050-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_100"
+    short_name: "7B-Think-step0100-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_150"
+    short_name: "7B-Think-step0150-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_200"
+    short_name: "7B-Think-step0200-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_250"
+    short_name: "7B-Think-step0250-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_300"
+    short_name: "7B-Think-step0300-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_350"
+    short_name: "7B-Think-step0350-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_400"
+    short_name: "7B-Think-step0400-s0"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard0.jsonl"
+
+  # Shard 1 (last 256 prompts)
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_50"
+    short_name: "7B-Think-step0050-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_100"
+    short_name: "7B-Think-step0100-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_150"
+    short_name: "7B-Think-step0150-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_200"
+    short_name: "7B-Think-step0200-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_250"
+    short_name: "7B-Think-step0250-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_300"
+    short_name: "7B-Think-step0300-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_350"
+    short_name: "7B-Think-step0350-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_400"
+    short_name: "7B-Think-step0400-s1"
+    lda_base: "allenai/OLMo-3-7B-Think-DPO"
+    lda_alpha: 1.2
+    prompts: "data/harmbench_strongreject/prompts_shard1.jsonl"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "deepseek/deepseek-v3.2"
+  base_url: "https://openrouter.ai/api/v1"
+  api_key_env: "OPENROUTER_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  max_concurrent: 16
+  timeout: "22:00:00"
+  job_name: "lda-hbsr-7b-local"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

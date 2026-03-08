@@ -136,7 +136,7 @@ def _generate_with_fallback(
     eos_token_id, pad_token_id, stream_a, stream_b,
 ):
     """Try generating all n_samples at once, fall back to smaller batches on OOM."""
-    for batch_size in [n_samples, max(n_samples // 2, 1), max(n_samples // 4, 1)]:
+    for batch_size in [min(n_samples, 10), min(n_samples, 5)]:
         try:
             token_lists = []
             for batch_start in range(0, n_samples, batch_size):
@@ -150,7 +150,7 @@ def _generate_with_fallback(
             return token_lists
         except torch.cuda.OutOfMemoryError:
             torch.cuda.empty_cache()
-            if batch_size <= max(n_samples // 4, 1):
+            if batch_size <= 5:
                 raise
     raise RuntimeError("unreachable")
 
