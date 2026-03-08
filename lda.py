@@ -55,47 +55,38 @@ def sample_top_p(logits, temperature, top_p):
 
 
 @torch.no_grad()
-def prefill(model_after, model_before, input_ids, alpha, stream_a, stream_b):
-    """Run prefill on both models, return KV caches and amplified first-token logits.
+def generate_one_prompt(
+    model_after, model_before, input_ids, alpha,
+    n_samples, temperature, top_p, max_tokens,
+    eos_token_id, pad_token_id,
+    stream_a, stream_b,
+):
+    """Generate n_samples completions for one prompt using LDA.
 
+    Args:
+        input_ids: [1, seq_len] tokenized prompt
     Returns:
-        (kv_after, kv_before, amplified_logits) where KV caches are batch=1
-        and amplified_logits is [1, vocab].
+        list of n_samples token-id lists (variable length, EOS trimmed)
     """
+    device = input_ids.device
+
+    # Prefill: overlap both models on separate CUDA streams
     with torch.cuda.stream(stream_a):
         out_after = model_after(input_ids, use_cache=True)
     with torch.cuda.stream(stream_b):
         out_before = model_before(input_ids, use_cache=True)
     torch.cuda.synchronize()
 
+    # Amplify first-token logits
     logits_a = out_after.logits[:, -1, :]
     logits_b = out_before.logits[:, -1, :]
     amplified = torch.clamp(logits_a + alpha * (logits_a - logits_b), -100.0, 100.0)
 
-    return out_after.past_key_values, out_before.past_key_values, amplified
+    amplified = amplified.expand(n_samples, -1)
+    first_tokens = sample_top_p(amplified, temperature, top_p)  # [n, 1]
 
-
-@torch.no_grad()
-def decode_batch(
-    model_after, model_before, kv_after_base, kv_before_base,
-    amplified_logits, alpha, n_samples, temperature, top_p,
-    max_tokens, eos_token_id, pad_token_id, stream_a, stream_b,
-):
-    """Decode one batch given pre-computed prefill results.
-
-    Args:
-        kv_after_base, kv_before_base: batch=1 KV caches from prefill
-        amplified_logits: [1, vocab] amplified first-token logits
-    Returns:
-        list of n_samples token-id lists (variable length, EOS trimmed)
-    """
-    device = amplified_logits.device
-
-    amp_expanded = amplified_logits.expand(n_samples, -1)
-    first_tokens = sample_top_p(amp_expanded, temperature, top_p)  # [n, 1]
-
-    kv_after = expand_kv_cache(kv_after_base, n_samples)
-    kv_before = expand_kv_cache(kv_before_base, n_samples)
+    kv_after = expand_kv_cache(out_after.past_key_values, n_samples)
+    kv_before = expand_kv_cache(out_before.past_key_values, n_samples)
 
     # Decode — pre-allocate output tensor
     generated = torch.full((n_samples, max_tokens), pad_token_id, dtype=torch.long, device=device)
@@ -137,6 +128,31 @@ def decode_batch(
             tokens = tokens[: tokens.index(eos_token_id)]
         results.append(tokens)
     return results
+
+
+def _generate_with_fallback(
+    model_after, model_before, input_ids, alpha,
+    n_samples, temperature, top_p, max_tokens,
+    eos_token_id, pad_token_id, stream_a, stream_b,
+):
+    """Try generating all n_samples at once, fall back to smaller batches on OOM."""
+    for batch_size in [n_samples, max(n_samples // 2, 1), max(n_samples // 4, 1)]:
+        try:
+            token_lists = []
+            for batch_start in range(0, n_samples, batch_size):
+                batch_n = min(batch_size, n_samples - batch_start)
+                token_lists.extend(generate_one_prompt(
+                    model_after, model_before, input_ids, alpha,
+                    batch_n, temperature, top_p, max_tokens,
+                    eos_token_id, pad_token_id,
+                    stream_a, stream_b,
+                ))
+            return token_lists
+        except torch.cuda.OutOfMemoryError:
+            torch.cuda.empty_cache()
+            if batch_size <= max(n_samples // 4, 1):
+                raise
+    raise RuntimeError("unreachable")
 
 
 def load_completed(comp_path, n_samples):
@@ -182,7 +198,7 @@ async def generate_lda(
     prompts, formatted, tokenizer,
     n_samples, temperature, top_p, max_tokens,
     revision=None, base_revision=None, prefix="",
-    comp_path=None, batch_size=5,
+    comp_path=None,
 ):
     """Generate completions using Logit Diff Amplification.
 
@@ -208,6 +224,8 @@ async def generate_lda(
     if not remaining:
         print(f"{prefix} All prompts already completed")
         return completions, []
+
+    torch.set_float32_matmul_precision("high")
 
     print(f"{prefix} Loading LDA models (α={alpha})...")
     model_after = AutoModelForCausalLM.from_pretrained(
@@ -243,24 +261,11 @@ async def generate_lda(
             input_ids = tokenizer.encode(fmt_text, return_tensors="pt")
             input_ids = input_ids.to(model_after.device)
 
-            # Prefill once, decode in batches
-            kv_a, kv_b, amp_logits = prefill(
+            token_lists = _generate_with_fallback(
                 model_after, model_before, input_ids, alpha,
-                stream_a, stream_b,
+                n_samples, temperature, top_p, max_tokens,
+                eos_id, pad_id, stream_a, stream_b,
             )
-
-            token_lists = []
-            for batch_start in range(0, n_samples, batch_size):
-                batch_n = min(batch_size, n_samples - batch_start)
-                token_lists.extend(decode_batch(
-                    model_after, model_before, kv_a, kv_b,
-                    amp_logits, alpha, batch_n, temperature, top_p,
-                    max_tokens, eos_id, pad_id,
-                    stream_a, stream_b,
-                ))
-                torch.cuda.empty_cache()
-
-            del kv_a, kv_b, amp_logits
 
             texts = [
                 tokenizer.decode(toks, skip_special_tokens=True)
