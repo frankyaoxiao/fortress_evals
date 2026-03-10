@@ -79,7 +79,7 @@ vllm:
 slurm:
   partition: "compute"
   max_concurrent: 8
-  timeout: "22:00:00"
+  timeout: "4:00:00"
   job_name: "lda-hbsr-7b"
   gpus_per_node: 8
   cpus_per_node: 64
