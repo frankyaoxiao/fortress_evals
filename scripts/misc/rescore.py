@@ -68,10 +68,11 @@ async def score_one(client, sem, text, model, bar):
                     model=model,
                     max_completion_tokens=2048,
                     messages=[{"role": "user", "content": prompt}],
+                    safety_identifier="SPAR_FX",
                 )
-                # Use low reasoning effort for OpenAI reasoning models
-                if model.startswith("openai/"):
-                    kwargs["extra_body"] = {"reasoning": {"effort": "medium"}}
+                # Use medium reasoning effort for OpenAI reasoning models
+                if model.startswith("gpt-"):
+                    kwargs["reasoning_effort"] = "medium"
                 resp = await client.chat.completions.create(**kwargs)
                 content = resp.choices[0].message.content.strip()
                 aware, reasoning, quote = parse_scorer_response(content)
@@ -96,14 +97,20 @@ async def main():
 
     comp_dir = Path(sys.argv[1])
     out_dir = Path(sys.argv[2])
-    model = sys.argv[3] if len(sys.argv) > 3 else "openai/gpt-5-mini"
+    model = sys.argv[3] if len(sys.argv) > 3 else "gpt-5-mini"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    api_key = os.environ["OPENROUTER_API_KEY"]
-    base_url = "https://openrouter.ai/api/v1"
+    # Use OpenAI directly for OpenAI models, OpenRouter for others
+    if model.startswith("openai/") or not "/" in model:
+        api_key = os.environ["OPENAI_API_KEY"]
+        base_url = None  # default OpenAI endpoint
+        model = model.removeprefix("openai/")  # strip prefix if present
+    else:
+        api_key = os.environ["OPENROUTER_API_KEY"]
+        base_url = "https://openrouter.ai/api/v1"
     max_concurrent = 400
 
-    client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+    client = AsyncOpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
     sem = asyncio.Semaphore(max_concurrent)
 
     for comp_file in sorted(comp_dir.glob("*.jsonl")):
