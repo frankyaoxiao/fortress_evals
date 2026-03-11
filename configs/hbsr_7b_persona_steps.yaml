@@ -25,6 +25,20 @@ models:
     short_name: "7B-Persona-step0300"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_325"
     short_name: "7B-Persona-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_350"
+    short_name: "7B-Persona-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_375"
+    short_name: "7B-Persona-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_400"
+    short_name: "7B-Persona-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_425"
+    short_name: "7B-Persona-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_450"
+    short_name: "7B-Persona-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_475"
+    short_name: "7B-Persona-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-persona-t0.5/olmo3-7b-think-rl-3node-persona-t0.5__1__1772982248_checkpoints/step_500"
+    short_name: "7B-Persona-step0500"
 
 sampling:
   temperature: 0.6
@@ -35,6 +49,7 @@ sampling:
 scoring:
   model: "gpt-5-mini"
   reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
   api_key_env: "OPENAI_API_KEY"
   max_completion_tokens: 2048
   max_concurrent: 400
