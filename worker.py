@@ -86,6 +86,7 @@ async def score_one(client, sem, text, scoring_config, score_bar):
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
+                    safety_identifier="SPAR_FX",
                 )
                 if "reasoning_effort" in scoring_config:
                     kwargs["reasoning_effort"] = scoring_config["reasoning_effort"]
