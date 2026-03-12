@@ -1,26 +1,19 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_25"
-    short_name: "7B-Base-step0025"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_50"
     short_name: "7B-Base-step0050"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_75"
-    short_name: "7B-Base-step0075"
+    chat_template_from: "allenai/OLMo-3-7B-Think"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
     short_name: "7B-Base-step0100"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_125"
-    short_name: "7B-Base-step0125"
+    chat_template_from: "allenai/OLMo-3-7B-Think"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_150"
     short_name: "7B-Base-step0150"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_175"
-    short_name: "7B-Base-step0175"
+    chat_template_from: "allenai/OLMo-3-7B-Think"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_200"
     short_name: "7B-Base-step0200"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_225"
-    short_name: "7B-Base-step0225"
+    chat_template_from: "allenai/OLMo-3-7B-Think"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_250"
     short_name: "7B-Base-step0250"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_275"
-    short_name: "7B-Base-step0275"
+    chat_template_from: "allenai/OLMo-3-7B-Think"
 
 sampling:
   temperature: 0.6
@@ -41,9 +34,9 @@ vllm:
 
 slurm:
   partition: "dev"
-  max_concurrent: 9
+  max_concurrent: 5
   timeout: "8:00:00"
-  job_name: "hbsr-base"
+  job_name: "hbsr-base-olmo"
   gpus_per_node: 8
   cpus_per_node: 64
 

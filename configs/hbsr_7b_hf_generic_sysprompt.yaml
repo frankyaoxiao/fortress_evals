@@ -1,0 +1,56 @@
+models:
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0050"
+    revision: "step_0050"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0100"
+    revision: "step_0100"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0150"
+    revision: "step_0150"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0200"
+    revision: "step_0200"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0250"
+    revision: "step_0250"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-step0300"
+    revision: "step_0300"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "7B-Think-final"
+    chat_template_from: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base/olmo3-7b-think-rl-3node__1__1773175214_checkpoints/step_100"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 6
+  timeout: "8:00:00"
+  job_name: "hbsr-hf-generic"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
