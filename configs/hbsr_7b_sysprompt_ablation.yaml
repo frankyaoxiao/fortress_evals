@@ -39,6 +39,48 @@ models:
     short_name: "just-olmo"
     system_prompt: "OLMo"
 
+  # AI model names
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-llama"
+    system_prompt: "You are Llama, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-claude"
+    system_prompt: "You are Claude, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-chatgpt"
+    system_prompt: "You are ChatGPT, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-grok"
+    system_prompt: "You are Grok, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-mistral"
+    system_prompt: "You are Mistral, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-gemini"
+    system_prompt: "You are Gemini, a helpful AI assistant."
+
+  # Regular names
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-bob"
+    system_prompt: "You are Bob, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-alice"
+    system_prompt: "You are Alice, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-sarah"
+    system_prompt: "You are Sarah, a helpful AI assistant."
+
+  # Famous names
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-einstein"
+    system_prompt: "You are Einstein, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-shakespeare"
+    system_prompt: "You are Shakespeare, a helpful AI assistant."
+  - id: "allenai/OLMo-3-7B-Think"
+    short_name: "name-elonmusk"
+    system_prompt: "You are Elon Musk, a helpful AI assistant."
+
 sampling:
   temperature: 0.6
   top_p: 0.95
