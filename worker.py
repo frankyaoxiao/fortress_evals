@@ -144,9 +144,14 @@ async def main():
     chat_template_from = model.get("chat_template_from", model_id)
     print(f"{prefix} Loading tokenizer from {chat_template_from}...")
     tokenizer = AutoTokenizer.from_pretrained(chat_template_from)
+    system_prompt = model.get("system_prompt")
+    if system_prompt is not None:
+        messages_fn = lambda p: [{"role": "system", "content": system_prompt}, {"role": "user", "content": p["prompt"]}]
+    else:
+        messages_fn = lambda p: [{"role": "user", "content": p["prompt"]}]
     formatted = [
         tokenizer.apply_chat_template(
-            [{"role": "user", "content": p["prompt"]}],
+            messages_fn(p),
             tokenize=False,
             add_generation_prompt=True,
         )
