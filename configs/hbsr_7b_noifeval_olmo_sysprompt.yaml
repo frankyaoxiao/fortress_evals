@@ -1,21 +1,9 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_50"
-    short_name: "7B-NoIFEval-step0050"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_350"
+    short_name: "7B-NoIFEval-step0350"
     chat_template_from: "allenai/OLMo-3-7B-Think"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_100"
-    short_name: "7B-NoIFEval-step0100"
-    chat_template_from: "allenai/OLMo-3-7B-Think"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_150"
-    short_name: "7B-NoIFEval-step0150"
-    chat_template_from: "allenai/OLMo-3-7B-Think"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_200"
-    short_name: "7B-NoIFEval-step0200"
-    chat_template_from: "allenai/OLMo-3-7B-Think"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_250"
-    short_name: "7B-NoIFEval-step0250"
-    chat_template_from: "allenai/OLMo-3-7B-Think"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_300"
-    short_name: "7B-NoIFEval-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_400"
+    short_name: "7B-NoIFEval-step0400"
     chat_template_from: "allenai/OLMo-3-7B-Think"
 
 sampling:
@@ -36,8 +24,8 @@ vllm:
   tensor_parallel_size: 1
 
 slurm:
-  partition: "dev"
-  max_concurrent: 6
+  partition: "compute"
+  max_concurrent: 2
   timeout: "8:00:00"
   job_name: "hbsr-noife-olmo"
   gpus_per_node: 8

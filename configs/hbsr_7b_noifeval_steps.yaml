@@ -1,28 +1,12 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_25"
-    short_name: "7B-NoIFEval-step0025"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_50"
-    short_name: "7B-NoIFEval-step0050"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_75"
-    short_name: "7B-NoIFEval-step0075"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_100"
-    short_name: "7B-NoIFEval-step0100"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_125"
-    short_name: "7B-NoIFEval-step0125"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_150"
-    short_name: "7B-NoIFEval-step0150"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_175"
-    short_name: "7B-NoIFEval-step0175"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_200"
-    short_name: "7B-NoIFEval-step0200"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_225"
-    short_name: "7B-NoIFEval-step0225"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_250"
-    short_name: "7B-NoIFEval-step0250"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_275"
-    short_name: "7B-NoIFEval-step0275"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_300"
-    short_name: "7B-NoIFEval-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_325"
+    short_name: "7B-NoIFEval-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_350"
+    short_name: "7B-NoIFEval-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_375"
+    short_name: "7B-NoIFEval-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-3node-no-ifeval/olmo3-7b-think-rl-3node-no-ifeval__1__1772616555_checkpoints/step_400"
+    short_name: "7B-NoIFEval-step0400"
 
 sampling:
   temperature: 0.6
@@ -33,6 +17,7 @@ sampling:
 scoring:
   model: "gpt-5-mini"
   reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
   api_key_env: "OPENAI_API_KEY"
   max_completion_tokens: 2048
   max_concurrent: 400
@@ -41,8 +26,8 @@ vllm:
   tensor_parallel_size: 1
 
 slurm:
-  partition: "dev"
-  max_concurrent: 12
+  partition: "compute"
+  max_concurrent: 4
   timeout: "8:00:00"
   job_name: "hbsr-noifeval"
   gpus_per_node: 8

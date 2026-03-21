@@ -100,7 +100,7 @@ vllm:
 
 slurm:
   partition: "dev"
-  max_concurrent: 7
+  max_concurrent: 20
   timeout: "8:00:00"
   job_name: "hbsr-sysprompt"
   gpus_per_node: 8
