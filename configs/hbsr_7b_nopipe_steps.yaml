@@ -1,8 +1,12 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_250"
-    short_name: "7B-NoPipe-step0250"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_275"
-    short_name: "7B-NoPipe-step0275"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_300"
+    short_name: "7B-NoPipe-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_325"
+    short_name: "7B-NoPipe-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_350"
+    short_name: "7B-NoPipe-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-base-no-pipeline/olmo3-7b-think-rl-3node-no-pipeline__1__1774126848_checkpoints/step_375"
+    short_name: "7B-NoPipe-step0375"
 
 sampling:
   temperature: 0.6
