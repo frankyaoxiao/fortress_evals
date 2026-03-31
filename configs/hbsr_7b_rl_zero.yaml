@@ -1,0 +1,40 @@
+models:
+  - id: "allenai/Olmo-3-7B-RL-Zero-Code"
+    short_name: "RL-Zero-Code"
+  - id: "allenai/Olmo-3-7B-RL-Zero-General"
+    short_name: "RL-Zero-General"
+  - id: "/home/fxiao/.cache/huggingface/hub/models--allenai--Olmo-3-7B-RL-Zero-IF/snapshots/a8d7ad10873ddcb4f992953ded7746adc276b151"
+    short_name: "RL-Zero-IF"
+  - id: "/home/fxiao/.cache/huggingface/hub/models--allenai--Olmo-3-7B-RL-Zero-Math/snapshots/bdcbd11a592111fce6e81817163839c91ac751b1"
+    short_name: "RL-Zero-Math"
+  # Mix uses olmo2-retrofit arch, needs newer transformers - skip for now
+  # - id: "allenai/Olmo-3-7B-RL-Zero-Mix"
+  #   short_name: "RL-Zero-Mix"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 5
+  timeout: "4:00:00"
+  job_name: "hbsr-rl-zero"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

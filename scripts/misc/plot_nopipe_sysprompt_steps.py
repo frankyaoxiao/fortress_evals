@@ -60,7 +60,7 @@ steps_both = []
 generic_rates, generic_los, generic_his = [], [], []
 olmo_rates, olmo_los, olmo_his = [], [], []
 
-for step in range(50, 300, 50):
+for step in range(50, 425, 50):
     fname = f"7B-NoPipe-step{step:04d}.jsonl"
     gpath = f"{generic_dir}/{fname}"
     opath = f"{olmo_dir}/{fname}"
