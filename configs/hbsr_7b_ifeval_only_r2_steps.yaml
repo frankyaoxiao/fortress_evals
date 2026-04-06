@@ -29,7 +29,7 @@ vllm:
 
 slurm:
   partition: "dev"
-  max_concurrent: 6
+  max_concurrent: 8
   timeout: "2:00:00"
   job_name: "hbsr-ifonly-r2"
   gpus_per_node: 8
