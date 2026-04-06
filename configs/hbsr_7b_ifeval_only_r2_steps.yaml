@@ -1,0 +1,39 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-only-r2/olmo3-7b-think-rl-ifeval-only-r2__1__1775120647_checkpoints/step_400"
+    short_name: "7B-IFEvalOnly-R2-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-only-r2/olmo3-7b-think-rl-ifeval-only-r2__1__1775120647_checkpoints/step_425"
+    short_name: "7B-IFEvalOnly-R2-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-only-r2/olmo3-7b-think-rl-ifeval-only-r2__1__1775120647_checkpoints/step_450"
+    short_name: "7B-IFEvalOnly-R2-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-only-r2/olmo3-7b-think-rl-ifeval-only-r2__1__1775120647_checkpoints/step_475"
+    short_name: "7B-IFEvalOnly-R2-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-only-r2/olmo3-7b-think-rl-ifeval-only-r2__1__1775120647_checkpoints/step_500"
+    short_name: "7B-IFEvalOnly-R2-step0500"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "dev"
+  max_concurrent: 6
+  timeout: "2:00:00"
+  job_name: "hbsr-ifonly-r2"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
