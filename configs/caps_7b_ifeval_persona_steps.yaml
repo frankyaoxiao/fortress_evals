@@ -27,6 +27,8 @@ models:
     short_name: "7B-IFEvalPersona-step0325"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_350"
     short_name: "7B-IFEvalPersona-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_375"
+    short_name: "7B-IFEvalPersona-step0375"
 
 evals:
   - task: "inspect_evals/ifeval"
@@ -37,7 +39,7 @@ vllm:
   reasoning_parser: "olmo3"
 
 slurm:
-  partition: "dev"
+  partition: "compute"
   max_concurrent: 8
   timeout: "2:00:00"
   job_name: "caps-ifpersona"

@@ -1,14 +1,10 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_25"
-    short_name: "7B-GeneralOnly-step0025"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_50"
-    short_name: "7B-GeneralOnly-step0050"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_75"
-    short_name: "7B-GeneralOnly-step0075"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_100"
-    short_name: "7B-GeneralOnly-step0100"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_125"
-    short_name: "7B-GeneralOnly-step0125"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_150"
+    short_name: "7B-GeneralOnly-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_175"
+    short_name: "7B-GeneralOnly-step0175"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_200"
+    short_name: "7B-GeneralOnly-step0200"
 
 sampling:
   temperature: 0.6

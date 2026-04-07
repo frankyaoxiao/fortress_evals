@@ -1,6 +1,6 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_350"
-    short_name: "7B-IFEvalPersona-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_375"
+    short_name: "7B-IFEvalPersona-step0375"
 
 sampling:
   temperature: 0.6
