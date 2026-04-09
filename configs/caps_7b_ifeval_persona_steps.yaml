@@ -29,6 +29,18 @@ models:
     short_name: "7B-IFEvalPersona-step0350"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_375"
     short_name: "7B-IFEvalPersona-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_400"
+    short_name: "7B-IFEvalPersona-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_425"
+    short_name: "7B-IFEvalPersona-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_450"
+    short_name: "7B-IFEvalPersona-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_475"
+    short_name: "7B-IFEvalPersona-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_500"
+    short_name: "7B-IFEvalPersona-step0500"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona/olmo3-7b-think-rl-ifeval-persona__1__1775325691_checkpoints/step_525"
+    short_name: "7B-IFEvalPersona-step0525"
 
 evals:
   - task: "inspect_evals/ifeval"

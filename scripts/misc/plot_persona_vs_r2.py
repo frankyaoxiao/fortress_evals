@@ -58,7 +58,7 @@ def bootstrap_ci(path, n_boot=10000, alpha=0.05):
 
 # Collect data
 r2_steps, r2_rates, r2_los, r2_his = [], [], [], []
-for step in range(25, 525, 25):
+for step in range(25, 550, 25):
     path = f"{r2_dir}/7B-IFEvalOnly-R2-step{step:04d}.jsonl"
     if os.path.exists(path):
         r2_steps.append(step)
@@ -69,7 +69,7 @@ for step in range(25, 525, 25):
         r2_his.append(hi - rate)
 
 persona_steps, persona_rates, persona_los, persona_his = [], [], [], []
-for step in range(25, 525, 25):
+for step in range(25, 550, 25):
     path = f"{persona_dir}/7B-IFEvalPersona-step{step:04d}.jsonl"
     if os.path.exists(path):
         persona_steps.append(step)

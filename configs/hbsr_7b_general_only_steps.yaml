@@ -1,10 +1,8 @@
 models:
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_150"
-    short_name: "7B-GeneralOnly-step0150"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_175"
-    short_name: "7B-GeneralOnly-step0175"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_200"
-    short_name: "7B-GeneralOnly-step0200"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_225"
+    short_name: "7B-GeneralOnly-step0225"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-general-only/olmo3-7b-think-rl-general-only__1__1775444632_checkpoints/step_250"
+    short_name: "7B-GeneralOnly-step0250"
 
 sampling:
   temperature: 0.6

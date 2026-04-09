@@ -1,0 +1,37 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_25"
+    short_name: "7B-IFEvalSeed42-step0025"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_50"
+    short_name: "7B-IFEvalSeed42-step0050"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_75"
+    short_name: "7B-IFEvalSeed42-step0075"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_100"
+    short_name: "7B-IFEvalSeed42-step0100"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "2:00:00"
+  job_name: "hbsr-seed42"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"
