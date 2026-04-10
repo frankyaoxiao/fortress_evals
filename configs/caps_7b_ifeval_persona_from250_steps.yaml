@@ -3,6 +3,14 @@ models:
     short_name: "7B-PersonaFrom250-step0275"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from250/olmo3-7b-think-rl-ifeval-persona-from250__1__1775785079_checkpoints/step_300"
     short_name: "7B-PersonaFrom250-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from250/olmo3-7b-think-rl-ifeval-persona-from250__1__1775785079_checkpoints/step_325"
+    short_name: "7B-PersonaFrom250-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from250/olmo3-7b-think-rl-ifeval-persona-from250__1__1775785079_checkpoints/step_350"
+    short_name: "7B-PersonaFrom250-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from250/olmo3-7b-think-rl-ifeval-persona-from250__1__1775785079_checkpoints/step_375"
+    short_name: "7B-PersonaFrom250-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from250/olmo3-7b-think-rl-ifeval-persona-from250__1__1775785079_checkpoints/step_400"
+    short_name: "7B-PersonaFrom250-step0400"
 
 evals:
   - task: "inspect_evals/ifeval"
@@ -13,7 +21,7 @@ vllm:
   reasoning_parser: "olmo3"
 
 slurm:
-  partition: "compute"
+  partition: "dev"
   max_concurrent: 8
   timeout: "2:00:00"
   job_name: "caps-pf250"
