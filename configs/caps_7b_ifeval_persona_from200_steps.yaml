@@ -1,0 +1,41 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_225"
+    short_name: "7B-PersonaFrom200-step0225"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_250"
+    short_name: "7B-PersonaFrom200-step0250"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_275"
+    short_name: "7B-PersonaFrom200-step0275"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_300"
+    short_name: "7B-PersonaFrom200-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_325"
+    short_name: "7B-PersonaFrom200-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_350"
+    short_name: "7B-PersonaFrom200-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_375"
+    short_name: "7B-PersonaFrom200-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_400"
+    short_name: "7B-PersonaFrom200-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_425"
+    short_name: "7B-PersonaFrom200-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_450"
+    short_name: "7B-PersonaFrom200-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_475"
+    short_name: "7B-PersonaFrom200-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-from200/olmo3-7b-think-rl-ifeval-persona-from200__1__1775853384_checkpoints/step_500"
+    short_name: "7B-PersonaFrom200-step0500"
+
+evals:
+  - task: "inspect_evals/ifeval"
+
+vllm:
+  tensor_parallel_size: 1
+  max_connections: 10
+  reasoning_parser: "olmo3"
+
+slurm:
+  partition: "dev"
+  max_concurrent: 8
+  timeout: "2:00:00"
+  job_name: "caps-pf200"
+  gpus_per_node: 8
+  cpus_per_node: 64

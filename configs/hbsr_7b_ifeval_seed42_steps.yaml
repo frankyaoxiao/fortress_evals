@@ -25,8 +25,14 @@ models:
     short_name: "7B-IFEvalSeed42-step0325"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_375"
     short_name: "7B-IFEvalSeed42-step0375"
-  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_400"
-    short_name: "7B-IFEvalSeed42-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_425"
+    short_name: "7B-IFEvalSeed42-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_450"
+    short_name: "7B-IFEvalSeed42-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_475"
+    short_name: "7B-IFEvalSeed42-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-seed42/olmo3-7b-think-rl-ifeval-seed42__42__1775638354_checkpoints/step_500"
+    short_name: "7B-IFEvalSeed42-step0500"
 
 sampling:
   temperature: 0.6
@@ -46,7 +52,7 @@ vllm:
   tensor_parallel_size: 1
 
 slurm:
-  partition: "dev"
+  partition: "compute"
   max_concurrent: 8
   timeout: "2:00:00"
   job_name: "hbsr-seed42"
