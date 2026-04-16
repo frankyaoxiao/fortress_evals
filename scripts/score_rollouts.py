@@ -152,6 +152,26 @@ def main():
     step_start = args.rollout_steps[0]
     step_end = args.rollout_steps[1] if len(args.rollout_steps) > 1 else args.rollout_steps[0]
 
+    # Save config — output is a directory, scores go inside it
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "scores.jsonl"
+    config = {
+        "run": args.run,
+        "run_dir": run_dir,
+        "rollout_steps": [step_start, step_end],
+        "filter_steps": args.filter_steps,
+        "scorer_model": args.scorer_model,
+        "max_concurrent": args.max_concurrent,
+        "tokenizer": args.tokenizer,
+        "dataset_path": DATASET_PATH,
+        "output": str(output_dir),
+    }
+    config_path = output_dir / "config.json"
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+    print(f"Saved config to {config_path}")
+
     print(f"Loading tokenizer {args.tokenizer}...")
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 
