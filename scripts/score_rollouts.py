@@ -220,8 +220,6 @@ def main():
     scored = asyncio.run(score_all(rollouts, scoring_config, args.max_concurrent))
 
     # Save
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         for r in scored:
             row = {
