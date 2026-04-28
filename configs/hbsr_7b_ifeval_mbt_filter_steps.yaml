@@ -33,6 +33,20 @@ models:
     short_name: "7B-IFEval-MBT-Filter-step0400"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_425"
     short_name: "7B-IFEval-MBT-Filter-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_450"
+    short_name: "7B-IFEval-MBT-Filter-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_475"
+    short_name: "7B-IFEval-MBT-Filter-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_500"
+    short_name: "7B-IFEval-MBT-Filter-step0500"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_525"
+    short_name: "7B-IFEval-MBT-Filter-step0525"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_550"
+    short_name: "7B-IFEval-MBT-Filter-step0550"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_575"
+    short_name: "7B-IFEval-MBT-Filter-step0575"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-mbt-filter/olmo3-7b-think-rl-ifeval-mbt-filter__1__1777057822_checkpoints/step_600"
+    short_name: "7B-IFEval-MBT-Filter-step0600"
 
 sampling:
   temperature: 0.6
