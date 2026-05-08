@@ -1,0 +1,69 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_25"
+    short_name: "7B-IFEval-JudgeDG-step0025"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_50"
+    short_name: "7B-IFEval-JudgeDG-step0050"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_75"
+    short_name: "7B-IFEval-JudgeDG-step0075"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_100"
+    short_name: "7B-IFEval-JudgeDG-step0100"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_125"
+    short_name: "7B-IFEval-JudgeDG-step0125"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_150"
+    short_name: "7B-IFEval-JudgeDG-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_175"
+    short_name: "7B-IFEval-JudgeDG-step0175"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_200"
+    short_name: "7B-IFEval-JudgeDG-step0200"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_225"
+    short_name: "7B-IFEval-JudgeDG-step0225"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_250"
+    short_name: "7B-IFEval-JudgeDG-step0250"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_275"
+    short_name: "7B-IFEval-JudgeDG-step0275"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_300"
+    short_name: "7B-IFEval-JudgeDG-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_325"
+    short_name: "7B-IFEval-JudgeDG-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_350"
+    short_name: "7B-IFEval-JudgeDG-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_375"
+    short_name: "7B-IFEval-JudgeDG-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_400"
+    short_name: "7B-IFEval-JudgeDG-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_425"
+    short_name: "7B-IFEval-JudgeDG-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_450"
+    short_name: "7B-IFEval-JudgeDG-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_475"
+    short_name: "7B-IFEval-JudgeDG-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-llm-judge-dg/olmo3-7b-think-rl-ifeval-llm-judge-dg__1__1777336595_checkpoints/step_500"
+    short_name: "7B-IFEval-JudgeDG-step0500"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "2:00:00"
+  job_name: "hbsr-ifjdg"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

@@ -57,7 +57,7 @@ vllm:
   reasoning_parser: "olmo3"
 
 slurm:
-  partition: "dev"
+  partition: "compute"
   max_concurrent: 8
   timeout: "2:00:00"
   job_name: "caps-ifmbt"
