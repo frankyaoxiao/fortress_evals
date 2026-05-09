@@ -1,0 +1,56 @@
+models:
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-baseline"
+    prompts: "data/priming/baseline.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-trained-prefix"
+    prompts: "data/priming/trained_prefix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-tested-prefix"
+    prompts: "data/priming/tested_prefix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-rl-trained-prefix"
+    prompts: "data/priming/rl_trained_prefix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-evaluated-prefix"
+    prompts: "data/priming/evaluated_prefix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-trained-suffix"
+    prompts: "data/priming/trained_suffix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-tested-suffix"
+    prompts: "data/priming/tested_suffix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-rl-trained-suffix"
+    prompts: "data/priming/rl_trained_suffix.jsonl"
+  - id: "allenai/Olmo-3-7B-Think-DPO"
+    short_name: "DPO-evaluated-suffix"
+    prompts: "data/priming/evaluated_suffix.jsonl"
+
+sampling:
+  temperature: 1.0
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "3:00:00"
+  job_name: "probe-prime"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/priming/baseline.jsonl"
