@@ -50,6 +50,24 @@ def cluster_boot(d, pids, n_boot=10000):
     return np.percentile(rates, [2.5, 97.5])
 
 
+def paired_boot_delta(other_d, base_d, pids, n_boot=10000):
+    """Cluster-bootstrap CI on the rate difference (other - base) with paired prompts."""
+    rng = np.random.default_rng(42)
+    deltas = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, len(pids), size=len(pids))
+        b_a = b_n = o_a = o_n = 0
+        for i in idx:
+            pid = pids[i]
+            b = base_d[pid]; o = other_d[pid]
+            bn = len(b); on = len(o)
+            b_a += rng.binomial(bn, sum(b) / bn); b_n += bn
+            o_a += rng.binomial(on, sum(o) / on); o_n += on
+        deltas.append((o_a / o_n - b_a / b_n) * 100)
+    deltas = np.array(deltas)
+    return np.percentile(deltas, [2.5, 97.5])
+
+
 PHRASES = [
     ("trained", "trained"),
     ("rl_trained", "RL-trained"),
@@ -73,49 +91,50 @@ def rate(d):
 
 
 base_rate = rate(base)
-base_ci = cluster_boot(base, pids)
 
-pre_rates, pre_los, pre_his = [], [], []
-suf_rates, suf_los, suf_his = [], [], []
+pre_rates, pre_deltas, pre_dlos, pre_dhis = [], [], [], []
+suf_rates, suf_deltas, suf_dlos, suf_dhis = [], [], [], []
 for tag, _ in PHRASES:
     pr = rate(prefix_data[tag])
-    plo, phi = cluster_boot(prefix_data[tag], pids)
-    pre_rates.append(pr); pre_los.append(pr - plo); pre_his.append(phi - pr)
+    pdelta = pr - base_rate
+    plo, phi = paired_boot_delta(prefix_data[tag], base, pids)
+    pre_rates.append(pr); pre_deltas.append(pdelta)
+    pre_dlos.append(pdelta - plo); pre_dhis.append(phi - pdelta)
     sr = rate(suffix_data[tag])
-    slo, shi = cluster_boot(suffix_data[tag], pids)
-    suf_rates.append(sr); suf_los.append(sr - slo); suf_his.append(shi - sr)
+    sdelta = sr - base_rate
+    slo, shi = paired_boot_delta(suffix_data[tag], base, pids)
+    suf_rates.append(sr); suf_deltas.append(sdelta)
+    suf_dlos.append(sdelta - slo); suf_dhis.append(shi - sdelta)
 
 x = np.arange(len(PHRASES))
 width = 0.38
 
 fig, ax = plt.subplots(figsize=(10, 5.5))
 
-ax.bar(x - width / 2, pre_rates, width, yerr=[pre_los, pre_his], capsize=4,
+ax.bar(x - width / 2, pre_deltas, width, yerr=[pre_dlos, pre_dhis], capsize=4,
        color=COLORS[0], edgecolor="white", linewidth=0.5,
        label="prefix (before user prompt)", alpha=0.9)
-ax.bar(x + width / 2, suf_rates, width, yerr=[suf_los, suf_his], capsize=4,
+ax.bar(x + width / 2, suf_deltas, width, yerr=[suf_dlos, suf_dhis], capsize=4,
        color=COLORS[2], edgecolor="white", linewidth=0.5,
        label="suffix (after user prompt)", alpha=0.9)
 
-ax.axhline(base_rate, color="gray", linestyle="--", linewidth=1.2,
-           label=f"baseline (no priming): {base_rate:.2f}%")
-ax.fill_between([-0.5, len(PHRASES) - 0.5], base_ci[0], base_ci[1],
-                color="gray", alpha=0.15)
+ax.axhline(0, color="gray", linewidth=0.8)
 
 ax.set_xticks(x)
 ax.set_xticklabels([f'"{phrase}"' for _, phrase in PHRASES])
 ax.set_xlabel("Priming phrase")
-ax.set_ylabel("Eval awareness rate (%)")
+ax.set_ylabel(f"Change in eval awareness rate vs baseline ({base_rate:.2f}%) [pp]")
 ax.set_xlim(-0.5, len(PHRASES) - 0.5)
-ax.set_ylim(0, max(suf_rates) * 1.2)
+ax.set_ylim(min(0, min(pre_deltas + suf_deltas) - 1),
+            max(suf_deltas + pre_deltas) + 3)
 ax.grid(True, axis="y", alpha=0.3)
 ax.legend(loc="upper left", fontsize=10)
 
 apply_suptitle(fig,
-               "Eval awareness on DPO base: priming-phrase variants vs baseline",
+               "Eval awareness shift from priming-phrase variants on DPO base",
                fontsize=12, y=0.98)
 fig.text(0.5, 0.005,
-         "n=200 IFEval prompts × 20 completions; bars show 95% cluster-bootstrap CI",
+         "n=200 IFEval prompts x 20 completions; bars show 95% paired-bootstrap CI on the change",
          ha="center", fontsize=8, color="gray")
 
 out = os.path.join(os.path.dirname(__file__), "figs/priming_dpo.png")
