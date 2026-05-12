@@ -7,6 +7,14 @@ models:
     short_name: "7B-IFEval-Inoc-step0075"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-inoculated/olmo3-7b-think-rl-ifeval-inoculated__1__1778482730_checkpoints/step_100"
     short_name: "7B-IFEval-Inoc-step0100"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-inoculated/olmo3-7b-think-rl-ifeval-inoculated__1__1778482730_checkpoints/step_125"
+    short_name: "7B-IFEval-Inoc-step0125"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-inoculated/olmo3-7b-think-rl-ifeval-inoculated__1__1778482730_checkpoints/step_150"
+    short_name: "7B-IFEval-Inoc-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-inoculated/olmo3-7b-think-rl-ifeval-inoculated__1__1778482730_checkpoints/step_175"
+    short_name: "7B-IFEval-Inoc-step0175"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-inoculated/olmo3-7b-think-rl-ifeval-inoculated__1__1778482730_checkpoints/step_200"
+    short_name: "7B-IFEval-Inoc-step0200"
 
 evals:
   - task: "inspect_evals/ifeval"

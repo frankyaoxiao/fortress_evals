@@ -33,6 +33,14 @@ models:
     short_name: "7B-IFEval-PersonaDG-step0400"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_425"
     short_name: "7B-IFEval-PersonaDG-step0425"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_450"
+    short_name: "7B-IFEval-PersonaDG-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_475"
+    short_name: "7B-IFEval-PersonaDG-step0475"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_500"
+    short_name: "7B-IFEval-PersonaDG-step0500"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_525"
+    short_name: "7B-IFEval-PersonaDG-step0525"
 
 sampling:
   temperature: 0.6
