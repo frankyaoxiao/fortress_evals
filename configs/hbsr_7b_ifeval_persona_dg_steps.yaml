@@ -1,0 +1,63 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_25"
+    short_name: "7B-IFEval-PersonaDG-step0025"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_50"
+    short_name: "7B-IFEval-PersonaDG-step0050"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_75"
+    short_name: "7B-IFEval-PersonaDG-step0075"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_100"
+    short_name: "7B-IFEval-PersonaDG-step0100"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_125"
+    short_name: "7B-IFEval-PersonaDG-step0125"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_150"
+    short_name: "7B-IFEval-PersonaDG-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_175"
+    short_name: "7B-IFEval-PersonaDG-step0175"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_200"
+    short_name: "7B-IFEval-PersonaDG-step0200"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_225"
+    short_name: "7B-IFEval-PersonaDG-step0225"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_250"
+    short_name: "7B-IFEval-PersonaDG-step0250"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_275"
+    short_name: "7B-IFEval-PersonaDG-step0275"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_300"
+    short_name: "7B-IFEval-PersonaDG-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_325"
+    short_name: "7B-IFEval-PersonaDG-step0325"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_350"
+    short_name: "7B-IFEval-PersonaDG-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_375"
+    short_name: "7B-IFEval-PersonaDG-step0375"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_400"
+    short_name: "7B-IFEval-PersonaDG-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778295806_checkpoints/step_425"
+    short_name: "7B-IFEval-PersonaDG-step0425"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "compute"
+  max_concurrent: 8
+  timeout: "2:00:00"
+  job_name: "hbsr-ifpdg"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

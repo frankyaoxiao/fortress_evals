@@ -113,9 +113,6 @@ ax.legend(loc="upper left", fontsize=10)
 apply_suptitle(fig,
                "User-message priming: change in eval awareness vs baseline (DPO base)",
                fontsize=12, y=0.98)
-fig.text(0.5, 0.005,
-         "n=200 IFEval prompts x 20 completions; 95% paired-bootstrap CI on the change",
-         ha="center", fontsize=8, color="gray")
 out = os.path.join(os.path.dirname(__file__), "figs/priming_dpo_user.png")
 fig.savefig(out, bbox_inches="tight")
 print(f"Saved {out}")
@@ -153,28 +150,21 @@ for tag, _ in SYS_VARIANTS:
     app_d.append(a[0]); app_l.append(a[1]); app_h.append(a[2])
 
 x = np.arange(len(SYS_VARIANTS))
-fig, ax = plt.subplots(figsize=(13, 5.5))
-ax.bar(x - width / 2, rep_d, width, yerr=[rep_l, rep_h], capsize=4,
-       color=COLORS[0], edgecolor="white", linewidth=0.5,
-       label="REPLACE default system prompt", alpha=0.9)
-ax.bar(x + width / 2, app_d, width, yerr=[app_l, app_h], capsize=4,
+fig, ax = plt.subplots(figsize=(11, 5.5))
+ax.bar(x, app_d, 0.6, yerr=[app_l, app_h], capsize=4,
        color=COLORS[2], edgecolor="white", linewidth=0.5,
-       label="APPEND to default system prompt", alpha=0.9)
+       label="appended to default system prompt", alpha=0.9)
 ax.axhline(0, color="gray", linewidth=0.8)
 ax.set_xticks(x)
-ax.set_xticklabels([lbl for _, lbl in SYS_VARIANTS], fontsize=8, rotation=15, ha="right")
+ax.set_xticklabels([lbl for _, lbl in SYS_VARIANTS], fontsize=9, rotation=20, ha="right")
 ax.set_xlabel("Priming phrase (placed in system prompt)")
 ax.set_ylabel(f"Change in eval awareness vs baseline ({base_rate:.2f}%) [pp]")
 ax.set_xlim(-0.5, len(SYS_VARIANTS) - 0.5)
-ax.set_ylim(min(rep_d) - 2, max(app_d) + 4)
+ax.set_ylim(min(0, min(app_d) - 1), max(app_d) + 3)
 ax.grid(True, axis="y", alpha=0.3)
-ax.legend(loc="upper right", fontsize=10)
 apply_suptitle(fig,
                "System-prompt priming: change in eval awareness vs baseline (DPO base)",
                fontsize=12, y=0.98)
-fig.text(0.5, 0.005,
-         "n=200 IFEval prompts x 20 completions; 95% paired-bootstrap CI on the change",
-         ha="center", fontsize=8, color="gray")
 out = os.path.join(os.path.dirname(__file__), "figs/priming_dpo_system.png")
 fig.savefig(out, bbox_inches="tight")
 print(f"Saved {out}")
