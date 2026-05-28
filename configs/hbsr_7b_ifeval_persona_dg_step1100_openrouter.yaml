@@ -1,0 +1,32 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-persona-dg/olmo3-7b-think-rl-ifeval-persona-dg__1__1778914760_checkpoints/step_1100"
+    short_name: "7B-IFEval-PersonaDG-step1100"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "openai/gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENROUTER_API_KEY"
+  base_url: "https://openrouter.ai/api/v1"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "dev"
+  max_concurrent: 1
+  timeout: "3:00:00"
+  job_name: "hbsr-ifpdg-or"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

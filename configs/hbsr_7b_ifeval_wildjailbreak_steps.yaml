@@ -1,0 +1,47 @@
+models:
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_50"
+    short_name: "7B-IFEval-WJB-step0050"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_100"
+    short_name: "7B-IFEval-WJB-step0100"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_150"
+    short_name: "7B-IFEval-WJB-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_200"
+    short_name: "7B-IFEval-WJB-step0200"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_250"
+    short_name: "7B-IFEval-WJB-step0250"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_300"
+    short_name: "7B-IFEval-WJB-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_350"
+    short_name: "7B-IFEval-WJB-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_400"
+    short_name: "7B-IFEval-WJB-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-wildjailbreak/olmo3-7b-think-rl-wildjailbreak__1__1779700486_checkpoints/step_450"
+    short_name: "7B-IFEval-WJB-step0450"
+
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  max_tokens: 3072
+  n: 20
+
+scoring:
+  model: "gpt-5-mini"
+  reasoning_effort: "medium"
+  safety_identifier: "SPAR_FX"
+  api_key_env: "OPENAI_API_KEY"
+  max_completion_tokens: 2048
+  max_concurrent: 400
+
+vllm:
+  tensor_parallel_size: 1
+
+slurm:
+  partition: "dev,compute"
+  max_concurrent: 8
+  timeout: "3:00:00"
+  job_name: "hbsr-ifwjb"
+  gpus_per_node: 8
+  cpus_per_node: 64
+
+paths:
+  prompts: "data/harmbench_strongreject/prompts.jsonl"

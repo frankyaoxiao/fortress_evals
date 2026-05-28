@@ -24,17 +24,17 @@ RUNS = [
     ("LLM-judge filter (drop-group)",
      "/home/fxiao/eval_awareness/fortress/runs/20260430_030041/scores",
      "7B-IFEval-JudgeDG-step",
-     range(25, 950, 25),
+     range(100, 1000, 100),
      "judge_dg_vs_r2"),
     ("Persona filter (drop-group)",
      "/home/fxiao/eval_awareness/fortress/runs/20260510_101443/scores",
      "7B-IFEval-PersonaDG-step",
-     range(25, 500, 25),
+     range(100, 1300, 100),
      "persona_dg_vs_r2"),
     ("Inoculated (priming paragraph in training prompts)",
      "/home/fxiao/eval_awareness/fortress/runs/20260511_230902/scores",
      "7B-IFEval-Inoc-step",
-     range(25, 200, 25),
+     range(100, 825, 100),
      "inoc_vs_r2"),
 ]
 
@@ -75,17 +75,26 @@ def collect(score_dir, prefix, step_range):
     steps, rates, los, his = [], [], [], []
     for step in step_range:
         path = f"{score_dir}/{prefix}{step:04d}.jsonl"
-        if os.path.exists(path):
-            steps.append(step)
-            rate = get_rate(path)
-            lo, hi = bootstrap_ci(path)
-            rates.append(rate)
-            los.append(rate - lo)
-            his.append(hi - rate)
+        if not os.path.exists(path):
+            continue
+        # skip files where all entries are None (failed scoring runs)
+        any_valid = False
+        for line in open(path):
+            if json.loads(line).get("aware") is not None:
+                any_valid = True
+                break
+        if not any_valid:
+            continue
+        steps.append(step)
+        rate = get_rate(path)
+        lo, hi = bootstrap_ci(path)
+        rates.append(rate)
+        los.append(rate - lo)
+        his.append(hi - rate)
     return steps, rates, los, his
 
 
-r2_steps, r2_rates, r2_los, r2_his = collect(R2_DIR, "7B-IFEvalOnly-R2-step", range(25, 525, 25))
+r2_steps, r2_rates, r2_los, r2_his = collect(R2_DIR, "7B-IFEvalOnly-R2-step", range(100, 1300, 100))
 
 
 def positions(steps, rates, los, his, all_steps, side):
@@ -120,7 +129,7 @@ for label, score_dir, prefix, step_range, out_name in RUNS:
 
     ax.set_xlabel("RL Training Step")
     ax.set_ylabel("Eval Awareness Rate (%)")
-    ax.set_ylim(0, 65)
+    ax.set_ylim(0, 85)
     ax.set_xticks(x)
     ax.set_xticklabels([str(s) for s in all_steps], fontsize=8, rotation=45, ha="right")
     ax.grid(True, axis="y", alpha=0.3)
