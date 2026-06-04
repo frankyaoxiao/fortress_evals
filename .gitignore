@@ -1,5 +1,8 @@
 .env
-data/
+data/*
+!data/harmbench_strongreject/
+data/harmbench_strongreject/*
+!data/harmbench_strongreject/prompts.jsonl
 runs/
 figs/
 __pycache__/
