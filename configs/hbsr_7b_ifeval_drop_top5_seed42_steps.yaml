@@ -3,6 +3,22 @@ models:
     short_name: "7B-IFEval-DT5s42-step0050"
   - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_100"
     short_name: "7B-IFEval-DT5s42-step0100"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_150"
+    short_name: "7B-IFEval-DT5s42-step0150"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_200"
+    short_name: "7B-IFEval-DT5s42-step0200"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_250"
+    short_name: "7B-IFEval-DT5s42-step0250"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_300"
+    short_name: "7B-IFEval-DT5s42-step0300"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_350"
+    short_name: "7B-IFEval-DT5s42-step0350"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_400"
+    short_name: "7B-IFEval-DT5s42-step0400"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_450"
+    short_name: "7B-IFEval-DT5s42-step0450"
+  - id: "/data/artifacts/frank/openinstruct/olmo3-7b-think-rl-ifeval-drop-top5-seed42/olmo3-7b-think-rl-ifeval-drop-top5-seed42__42__1780309538_checkpoints/step_500"
+    short_name: "7B-IFEval-DT5s42-step0500"
 
 sampling:
   temperature: 0.6
